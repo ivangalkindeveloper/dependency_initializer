@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:initializer/initializer.dart';
 
 import 'src/bloc/bloc.dart';
@@ -90,17 +93,42 @@ Future<void> main() async {
   final Initializer initializer = Initializer<Process, Result>(
     process: process,
     stepList: stepList,
+    onStart: (
+      Completer<Result> completer,
+      List<InitializationStep<Process>> stepList,
+    ) =>
+        stdout.write(
+      "Initializer started",
+    ),
+    onStartStep: (
+      InitializationStep<Process> step,
+    ) =>
+        stdout.write(
+      "Step started: ${step.title}",
+    ),
+    onSuccessStep: (
+      InitializationStep<Process> step,
+      Duration duration,
+    ) =>
+        stdout.write(
+      "Step finished: ${step.title} $duration",
+    ),
     onSuccess: (
       Result result,
       Duration duration,
-    ) {
-      print(
-        result.toString(),
-      );
-      print(
-        duration,
-      );
-    },
+    ) =>
+        stdout.write(
+      "Initializer finished: $duration",
+    ),
+    onError: (
+      Object? error,
+      StackTrace stackTrace,
+      Process process,
+      InitializationStep<Process> step,
+    ) =>
+        stdout.write(
+      "Initializer error. Step: ${step.title} Error: $error $stackTrace",
+    ),
   );
   await initializer.run();
 }

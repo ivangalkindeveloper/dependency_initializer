@@ -90,7 +90,7 @@ Future<void> main() async {
       );
 
       test(
-        "Main Test",
+        "Resource test",
         () async {
           final Initializer initializer = Initializer<Process, Result>(
             process: process,

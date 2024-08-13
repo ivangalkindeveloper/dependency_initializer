@@ -12,7 +12,4 @@ final class Result {
   final Config config;
   final Repository repository;
   final Bloc bloc;
-
-  @override
-  String toString() => "Result is ready";
 }

@@ -1,32 +1,30 @@
+import 'dart:async';
+
 import 'package:initializer/src/initialization_process.dart';
 import 'package:initializer/src/initialization_step.dart';
 
 class Initializer<Process extends InitializationProcess<Result>, Result> {
-  Initializer({
+  const Initializer({
     required this.process,
     required this.stepList,
     this.onStart,
     this.onStartStep,
     this.onSuccessStep,
     required this.onSuccess,
-    this.onErrorStep,
-  }) {
-    assert(
-      stepList.isNotEmpty,
-      "Step list can't be empty",
-    );
-  }
+    this.onError,
+  });
 
   final Process process;
   final List<InitializationStep<Process>> stepList;
   final void Function(
-    List<InitializationStep> stepList,
+    Completer<Result> completer,
+    List<InitializationStep<Process>> stepList,
   )? onStart;
   final void Function(
-    InitializationStep step,
+    InitializationStep<Process> step,
   )? onStartStep;
   final void Function(
-    InitializationStep step,
+    InitializationStep<Process> step,
     Duration duration,
   )? onSuccessStep;
   final void Function(
@@ -38,12 +36,20 @@ class Initializer<Process extends InitializationProcess<Result>, Result> {
     StackTrace stackTrace,
     Process process,
     InitializationStep<Process> step,
-  )? onErrorStep;
+  )? onError;
 
   Future<void> run() async {
+    assert(
+      stepList.isNotEmpty,
+      "Step list can't be empty",
+    );
+
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
+
+    final Completer<Result> completer = Completer<Result>();
     this.onStart?.call(
+          completer,
           stepList,
         );
     InitializationStep<Process> currentStep = stepList.first;
@@ -52,10 +58,12 @@ class Initializer<Process extends InitializationProcess<Result>, Result> {
       for (final InitializationStep<Process> step in this.stepList) {
         final Stopwatch stepStopWatch = Stopwatch();
         stepStopWatch.start();
+
         currentStep = step;
         await step.initialize(
           process,
         );
+
         stepStopWatch.stop();
         this.onSuccessStep?.call(
               step,
@@ -63,7 +71,11 @@ class Initializer<Process extends InitializationProcess<Result>, Result> {
             );
       }
     } catch (error, stackTrace) {
-      this.onErrorStep?.call(
+      completer.completeError(
+        error,
+        stackTrace,
+      );
+      this.onError?.call(
             error,
             stackTrace,
             process,
@@ -72,8 +84,12 @@ class Initializer<Process extends InitializationProcess<Result>, Result> {
       rethrow;
     }
 
-    stopwatch.stop();
     final Result result = process.toResult();
+    completer.complete(
+      result,
+    );
+    stopwatch.stop();
+
     this.onSuccess(
       result,
       stopwatch.elapsed,

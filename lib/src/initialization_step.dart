@@ -1,9 +1,9 @@
 import 'dart:async';
 
-abstract class InitializationStep<Progress> {
+abstract class InitializationStep<Process> {
   abstract final String title;
   abstract final FutureOr<void> Function(
-    Progress progress,
+    Process progress,
   ) initialize;
 }
 
