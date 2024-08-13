@@ -1,20 +1,24 @@
-import 'package:initializer/src/initialization_progress.dart';
+import 'package:initializer/src/initialization_process.dart';
 import 'package:initializer/src/initialization_step.dart';
 
-class Initializer<Config, Progress extends InitializationProgress<Result>,
-    Result> {
-  const Initializer({
-    required this.progress,
+class Initializer<Process extends InitializationProcess<Result>, Result> {
+  Initializer({
+    required this.process,
     required this.stepList,
     this.onStart,
     this.onStartStep,
     this.onSuccessStep,
     required this.onSuccess,
     this.onErrorStep,
-  });
+  }) {
+    assert(
+      stepList.isNotEmpty,
+      "Step list can't be empty",
+    );
+  }
 
-  final Progress progress;
-  final List<InitializationStep<Progress>> stepList;
+  final Process process;
+  final List<InitializationStep<Process>> stepList;
   final void Function(
     List<InitializationStep> stepList,
   )? onStart;
@@ -30,26 +34,27 @@ class Initializer<Config, Progress extends InitializationProgress<Result>,
     Duration duration,
   ) onSuccess;
   final void Function(
-    InitializationStep<Progress> step,
     Object? error,
     StackTrace stackTrace,
+    Process process,
+    InitializationStep<Process> step,
   )? onErrorStep;
 
   Future<void> run() async {
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
-    InitializationStep<Progress> currentStep = stepList.first;
     this.onStart?.call(
           stepList,
         );
+    InitializationStep<Process> currentStep = stepList.first;
 
     try {
-      for (final InitializationStep<Progress> step in this.stepList) {
+      for (final InitializationStep<Process> step in this.stepList) {
         final Stopwatch stepStopWatch = Stopwatch();
         stepStopWatch.start();
         currentStep = step;
         await step.initialize(
-          progress,
+          process,
         );
         stepStopWatch.stop();
         this.onSuccessStep?.call(
@@ -59,15 +64,16 @@ class Initializer<Config, Progress extends InitializationProgress<Result>,
       }
     } catch (error, stackTrace) {
       this.onErrorStep?.call(
-            currentStep,
             error,
             stackTrace,
+            process,
+            currentStep,
           );
       rethrow;
     }
 
     stopwatch.stop();
-    final Result result = progress.toResult();
+    final Result result = process.toResult();
     this.onSuccess(
       result,
       stopwatch.elapsed,

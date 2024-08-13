@@ -1,39 +1,101 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Pedant
+Initializer utility for resources of Dart & Flutter projects.
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
-
-## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
+# Usage
+1) Prepare list of initialize steps:
 ```dart
-const like = 'sample';
+  final List<DefaultInitializationStep<Process>> coreStepList = [
+    DefaultInitializationStep(
+      title: "Config",
+      initialize: (
+        Process process,
+      ) =>
+          process.config = Config$(),
+    ),
+  ];
+  final List<DefaultInitializationStep<Process>> dataStepList = [
+    DefaultInitializationStep(
+      title: "HttpClient",
+      initialize: (
+        Process process,
+      ) =>
+          process.client = HttpClient$(
+        config: process.config!,
+      ),
+    ),
+    DefaultInitializationStep(
+      title: "Api",
+      initialize: (
+        Process process,
+      ) =>
+          process.api = Api$(
+        client: process.client!,
+      ),
+    ),
+    DefaultInitializationStep(
+      title: "Dao",
+      initialize: (
+        Process process,
+      ) =>
+          process.dao = Dao$(
+        config: process.config!,
+      ),
+    ),
+    DefaultInitializationStep(
+      title: "Storage",
+      initialize: (
+        Process process,
+      ) =>
+          process.storage = Storage$(
+        config: process.config!,
+      ),
+    ),
+    DefaultInitializationStep(
+      title: "Repository",
+      initialize: (
+        Process process,
+      ) =>
+          process.repository = Repository$(
+        api: process.api!,
+        dao: process.dao!,
+        storage: process.storage!,
+      ),
+    ),
+  ];
+  final List<DefaultInitializationStep<Process>> blocStepList = [
+    DefaultInitializationStep(
+      title: "Bloc",
+      initialize: (
+        Process process,
+      ) =>
+          process.bloc = Bloc(
+        repository: process.repository!,
+      ),
+    ),
+  ];
+  final List<DefaultInitializationStep<Process>> stepList = [
+    ...coreStepList,
+    ...dataStepList,
+    ...blocStepList,
+  ];
 ```
 
-## Additional information
+2) Create initializer and start initialize process:
+```dart
+  final Process process = Process();
+  final Initializer initializer = Initializer<Process, Result>(
+    process: process,
+    stepList: stepList,
+    onSuccess: (
+      Result result,
+      Duration duration,
+    ) {
+        // Success result of initialization
+    },
+  );
+  await initializer.run();
+```
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+# Additional information
+For more details see example project.
+And feel free to open an issue if you find any bugs or errors or suggestions.
