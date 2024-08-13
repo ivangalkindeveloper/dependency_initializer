@@ -94,7 +94,12 @@ Future<void> main() async {
     process: process,
     stepList: stepList,
     onStart: (
-      Completer<Result> completer,
+      Completer<
+              (
+                Result result,
+                Future<void> Function() reinitialization,
+              )>
+          completer,
       List<InitializationStep<Process>> stepList,
     ) =>
         stdout.write(
@@ -125,9 +130,10 @@ Future<void> main() async {
       StackTrace stackTrace,
       Process process,
       InitializationStep<Process> step,
+      Duration duration,
     ) =>
         stdout.write(
-      "Initializer error. Step: ${step.title} Error: $error $stackTrace",
+      "Initializer error. Step: ${step.title} $duration Error: $error $stackTrace",
     ),
   );
   await initializer.run();
