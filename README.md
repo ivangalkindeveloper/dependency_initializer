@@ -1,5 +1,5 @@
-# Pedant
-Initializer utility for resources of Dart & Flutter projects.
+# Dependency initializer
+Initializer utility of dependencies for Dart & Flutter projects.
 
 # Usage
 1) Prepare list of initialize steps:
@@ -95,6 +95,11 @@ Initializer utility for resources of Dart & Flutter projects.
   );
   await initializer.run();
 ```
+
+# Usage cases
+Initializer has several use cases:
+1) As direct initialization
+2) With completer initialization
 
 # Additional information
 For more details see example project.

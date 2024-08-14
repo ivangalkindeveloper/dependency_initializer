@@ -1,6 +1,6 @@
 import 'dart:async';
 
-abstract class InitializationStep<Process> {
+abstract class DependencyInitializationStep<Process> {
   abstract final String title;
   abstract final FutureOr<void> Function(
     Process progress,
@@ -10,7 +10,7 @@ abstract class InitializationStep<Process> {
 }
 
 class DefaultInitializationStep<Progress>
-    implements InitializationStep<Progress> {
+    implements DependencyInitializationStep<Progress> {
   const DefaultInitializationStep({
     required this.title,
     required this.initialize,

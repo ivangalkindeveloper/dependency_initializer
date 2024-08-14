@@ -1,4 +1,4 @@
-import 'package:initializer/src/initialization_process.dart';
+import 'package:dependency_initializer/src/dependency_initialization_process.dart';
 
 import 'data/api.dart';
 import 'bloc/bloc.dart';
@@ -9,7 +9,7 @@ import 'data/repository.dart';
 import 'data/storage.dart';
 import 'result.dart';
 
-final class Process extends InitializationProcess<Result> {
+final class Process extends DependencyInitializationProcess<Result> {
   Config? config;
   HttpClient? client;
   Api? api;

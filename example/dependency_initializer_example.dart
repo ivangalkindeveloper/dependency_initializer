@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:initializer/initializer.dart';
+import 'package:dependency_initializer/dependency_initializer.dart';
 
 import 'src/bloc/bloc.dart';
 import 'src/core/config.dart';
@@ -90,29 +90,24 @@ Future<void> main() async {
   ];
 
   final Process process = Process();
-  final Initializer initializer = Initializer<Process, Result>(
+  final DependencyInitializer initializer =
+      DependencyInitializer<Process, Result>(
     process: process,
     stepList: stepList,
     onStart: (
-      Completer<
-              (
-                Result result,
-                Future<void> Function() reinitialization,
-              )>
-          completer,
-      List<InitializationStep<Process>> stepList,
+      Completer<DependencyInitializaionResult<Result>> completer,
     ) =>
         stdout.write(
       "Initializer started",
     ),
     onStartStep: (
-      InitializationStep<Process> step,
+      DependencyInitializationStep<Process> step,
     ) =>
         stdout.write(
       "Step started: ${step.title}",
     ),
     onSuccessStep: (
-      InitializationStep<Process> step,
+      DependencyInitializationStep<Process> step,
       Duration duration,
     ) =>
         stdout.write(
@@ -129,7 +124,7 @@ Future<void> main() async {
       Object? error,
       StackTrace stackTrace,
       Process process,
-      InitializationStep<Process> step,
+      DependencyInitializationStep<Process> step,
       Duration duration,
     ) =>
         stdout.write(
