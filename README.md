@@ -1,5 +1,5 @@
 # Dependency initializer
-Initializer utility of dependencies for Dart & Flutter projects.
+Initializer utility of dependencies for Dart & Flutter projects.\
 The utility does not depend on Flutter SDK to be able to use it for Dart projects as well.
 
 # Usage
@@ -97,7 +97,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
 
 # Use cases
 Initializer has several use cases:
-1) As direct flow initialization.
+1) Direct.\
 For example, if you want the Flutter application to show a native splash screen when it starts, and then launch the first widget.
 ```dart
   final Initializer initializer = Initializer<Process, Result>(
@@ -124,7 +124,7 @@ For example, if you want the Flutter application to show a native splash screen 
   await initializer.run();
 ```
 
-2) With completer initialization.
+2) With async completer.\
 For example, you have a widget that displays its splash screen, and this widget must be rebuilt asynchronously using the initialization compiler.
 ```dart
   final Initializer initializer = Initializer<Process, Result>(
@@ -150,12 +150,21 @@ For example, you have a widget that displays its splash screen, and this widget 
   await initializer.run();
 ```
 
-3) Reinitialization from result.
+3) Reinitialization from result.\
 For example, in the runtime of a Flutter application, you need to reinitialize your new dependencies for the new environment and return the first widget of the Flutter application again.
 ```dart
   await initializationResult.reinitialization(
     process: Process(),
-    stepList: newEnvironmentStepList,
+    stepList: [
+      DefaultInitializationStep(
+        title: "Config",
+        initialize: (
+          Process process,
+        ) =>
+            process.config = AnotherConfig$(),
+      ),
+      ...initializationResult.reinitializationStepList,
+    ],
     onSuccess: (
       DependencyInitializationResult<Process, Result> initializationResult,
       Duration duration,
