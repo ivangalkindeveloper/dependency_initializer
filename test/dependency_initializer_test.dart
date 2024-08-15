@@ -100,7 +100,8 @@ Future<void> main() async {
             process: process,
             stepList: stepList,
             onSuccess: (
-              Result result,
+              DependencyInitializationResult<Process, Result>
+                  initializationResult,
               Duration duration,
             ) {
               // Process
@@ -134,6 +135,7 @@ Future<void> main() async {
               );
 
               // Result
+              final Result result = initializationResult.result;
               expect(
                 result.config,
                 isNotNull,
@@ -234,9 +236,11 @@ Future<void> main() async {
             process: process,
             stepList: stepList,
             onSuccess: (
-              Result result,
+              DependencyInitializationResult<Process, Result>
+                  initializationResult,
               Duration duration,
             ) {
+              final Result result = initializationResult.result;
               expect(
                 result.config,
                 isNotNull,
@@ -336,26 +340,33 @@ Future<void> main() async {
               DependencyInitializer<Process, Result>(
             process: process,
             stepList: stepList,
-            onStart: (
-              Completer<DependencyInitializaionResult<Process, Result>>
-                  completer,
+            onSuccess: (
+              DependencyInitializationResult<Process, Result>
+                  initializationResult,
+              Duration duration,
             ) async {
-              final DependencyInitializaionResult<Process, Result>
-                  completeResult = await completer.future;
-              final Result newResult = await completeResult.reinitialization(
+              await initializationResult.reinitialization(
+                process: Process(),
                 stepList: stepList,
-              );
-              expect(
-                newResult.config,
-                isNotNull,
-              );
-              expect(
-                newResult.repository,
-                isNotNull,
-              );
-              expect(
-                newResult.bloc,
-                isNotNull,
+                onSuccess: (
+                  DependencyInitializationResult<Process, Result>
+                      initializationResult,
+                  Duration duration,
+                ) {
+                  final Result result = initializationResult.result;
+                  expect(
+                    result.config,
+                    isNotNull,
+                  );
+                  expect(
+                    result.repository,
+                    isNotNull,
+                  );
+                  expect(
+                    result.bloc,
+                    isNotNull,
+                  );
+                },
               );
             },
           );

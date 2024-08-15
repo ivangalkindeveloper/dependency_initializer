@@ -83,19 +83,17 @@ Future<void> main() async {
       ),
     ),
   ];
-  final List<DefaultInitializationStep<Process>> stepList = [
-    ...coreStepList,
-    ...dataStepList,
-    ...blocStepList,
-  ];
 
-  final Process process = Process();
   final DependencyInitializer initializer =
       DependencyInitializer<Process, Result>(
-    process: process,
-    stepList: stepList,
+    process: Process(),
+    stepList: [
+      ...coreStepList,
+      ...dataStepList,
+      ...blocStepList,
+    ],
     onStart: (
-      Completer<DependencyInitializaionResult<Process, Result>> completer,
+      Completer<DependencyInitializationResult<Process, Result>> completer,
     ) =>
         stdout.write(
       "Initializer started",
@@ -114,7 +112,7 @@ Future<void> main() async {
       "Step finished: ${step.title} $duration",
     ),
     onSuccess: (
-      Result result,
+      DependencyInitializationResult<Process, Result> initializationResult,
       Duration duration,
     ) =>
         stdout.write(

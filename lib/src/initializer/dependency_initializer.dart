@@ -28,7 +28,7 @@ class DependencyInitializer<
   final bool isolateErrorsAreFatal;
   final String? isolateDebugName;
   final void Function(
-    Completer<DependencyInitializaionResult<Process, Result>> completer,
+    Completer<DependencyInitializationResult<Process, Result>> completer,
   )? onStart;
   final void Function(
     DependencyInitializationStep<Process> step,
@@ -38,7 +38,7 @@ class DependencyInitializer<
     Duration duration,
   )? onSuccessStep;
   final void Function(
-    Result result,
+    DependencyInitializationResult<Process, Result> result,
     Duration duration,
   )? onSuccess;
   final void Function(
@@ -58,8 +58,8 @@ class DependencyInitializer<
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
 
-    final Completer<DependencyInitializaionResult<Process, Result>> completer =
-        Completer<DependencyInitializaionResult<Process, Result>>();
+    final Completer<DependencyInitializationResult<Process, Result>> completer =
+        Completer<DependencyInitializationResult<Process, Result>>();
     this.onStart?.call(
           completer,
         );
@@ -114,19 +114,21 @@ class DependencyInitializer<
 
     isolateController?.close();
     final Result result = currentProcess.toResult();
-    completer.complete(
-      DependencyInitializaionResult<Process, Result>(
+    final DependencyInitializationResult<Process, Result> initializationResult =
+        DependencyInitializationResult<Process, Result>(
+      result: result,
+      reinitializationStepList: reinitializationStepList,
+      reinitialization: this._reinitialization(
+        completer: completer,
         result: result,
-        reinitializationStepList: reinitializationStepList,
-        reinitialization: this._reinitialization(
-          completer: completer,
-          result: result,
-        ),
       ),
+    );
+    completer.complete(
+      initializationResult,
     );
     stopwatch.stop();
     this.onSuccess?.call(
-          result,
+          initializationResult,
           stopwatch.elapsed,
         );
   }
@@ -156,50 +158,75 @@ class DependencyInitializer<
     );
   }
 
-  Future<Result> Function({
+  Future<void> Function({
+    required Process process,
     required List<DependencyInitializationStep<Process>> stepList,
+    void Function(
+      Completer<DependencyInitializationResult<Process, Result>> completer,
+    )? onStart,
+    void Function(
+      DependencyInitializationStep<Process> step,
+    )? onStartStep,
+    void Function(
+      DependencyInitializationStep<Process> step,
+      Duration duration,
+    )? onSuccessStep,
+    void Function(
+      DependencyInitializationResult<Process, Result> result,
+      Duration duration,
+    )? onSuccess,
+    void Function(
+      Object error,
+      StackTrace stackTrace,
+      Process process,
+      DependencyInitializationStep<Process> step,
+      Duration duration,
+    )? onError,
   }) _reinitialization({
-    required Completer<DependencyInitializaionResult<Process, Result>>
+    required Completer<DependencyInitializationResult<Process, Result>>
         completer,
     required Result result,
   }) =>
       ({
+        required Process process,
         required List<DependencyInitializationStep<Process>> stepList,
+        void Function(
+          Completer<DependencyInitializationResult<Process, Result>> completer,
+        )? onStart,
+        void Function(
+          DependencyInitializationStep<Process> step,
+        )? onStartStep,
+        void Function(
+          DependencyInitializationStep<Process> step,
+          Duration duration,
+        )? onSuccessStep,
+        void Function(
+          DependencyInitializationResult<Process, Result> result,
+          Duration duration,
+        )? onSuccess,
+        void Function(
+          Object error,
+          StackTrace stackTrace,
+          Process process,
+          DependencyInitializationStep<Process> step,
+          Duration duration,
+        )? onError,
       }) async {
         assert(
           completer.isCompleted,
           "Previos initialization process is not completed",
         );
 
-        final Completer<Result> reCompleter = Completer<Result>();
         await DependencyInitializer(
-          process: this.process,
+          process: process,
           stepList: stepList,
           isolateErrorsAreFatal: this.isolateErrorsAreFatal,
           isolateDebugName: this.isolateDebugName,
-          onStart: this.onStart,
-          onStartStep: this.onStartStep,
-          onSuccessStep: this.onSuccessStep,
-          onSuccess: (
-            Result result,
-            Duration duration,
-          ) =>
-              reCompleter.complete(
-            result,
-          ),
-          onError: (
-            Object error,
-            StackTrace stackTrace,
-            Process process,
-            DependencyInitializationStep<Process> step,
-            Duration duration,
-          ) =>
-              reCompleter.completeError(
-            error,
-            stackTrace,
-          ),
+          onStart: onStart ?? this.onStart,
+          onStartStep: onStartStep ?? this.onStartStep,
+          onSuccessStep: onSuccessStep ?? this.onSuccessStep,
+          onSuccess: onSuccess ?? this.onSuccess,
+          onError: onError ?? this.onError,
         ).run();
-
-        return await reCompleter.future;
       };
 }
