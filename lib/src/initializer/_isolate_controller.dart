@@ -1,74 +1,77 @@
 part of 'dependency_initializer.dart';
 
 final class _IsolateController<Process> {
-  _IsolateController({
+  const _IsolateController({
     required this.isolate,
-    required this.receivePort,
     required this.sendPort,
   });
 
   final Isolate isolate;
-  final ReceivePort receivePort;
   final SendPort sendPort;
 
-  static Future<_IsolateController> spawn<Process>() async {
-    final ReceivePort initializerReceivePort = ReceivePort();
+  static Future<_IsolateController<Process>> spawn<Process>({
+    required bool errorsAreFatal,
+    required String? debugName,
+  }) async {
+    final ReceivePort receivePort = ReceivePort();
     final Isolate isolate = await Isolate.spawn(
-      (
-        SendPort initializerSendPort,
-      ) {
-        final ReceivePort receivePort = ReceivePort();
-        initializerSendPort.send(
-          receivePort.sendPort,
-        );
-        receivePort.listen(
-          (
-            dynamic message,
-          ) async {
-            if (message is! (
-              Process,
-              DependencyInitializationStep<Process>,
-            )) {
-              return;
-            }
-
-            await message.$2.initialize(
-              message.$1,
-            );
-
-            initializerSendPort.send(
-              message.$1,
-            );
-          },
-        );
-      },
-      initializerReceivePort.sendPort,
+      _entry<Process>,
+      receivePort.sendPort,
+      errorsAreFatal: errorsAreFatal,
+      debugName: debugName,
     );
-
-    final SendPort sendPort = await initializerReceivePort.first;
+    final SendPort sendPort = await receivePort.first;
+    receivePort.close();
 
     return _IsolateController(
       isolate: isolate,
-      receivePort: initializerReceivePort,
       sendPort: sendPort,
     );
   }
 
-  void send({
+  static void _entry<Process>(
+    SendPort initializerSendPort,
+  ) {
+    final ReceivePort receivePort = ReceivePort();
+    initializerSendPort.send(
+      receivePort.sendPort,
+    );
+    receivePort.listen(
+      (
+        dynamic message,
+      ) async {
+        if (message is! _IsolateIteration<Process>) {
+          return;
+        }
+
+        await message.step.initialize(
+          message.process,
+        );
+
+        message.sendPort.send(
+          message.process,
+        );
+      },
+    );
+  }
+
+  Future<Process> send({
     required Process process,
     required DependencyInitializationStep<Process> step,
-  }) =>
-      this.sendPort.send(
-        (
-          process,
-          step,
-        ),
-      );
-
-  void close() {
-    this.isolate.kill(
-          priority: Isolate.immediate,
+  }) async {
+    final ReceivePort receivePort = ReceivePort();
+    this.sendPort.send(
+          _IsolateIteration(
+            sendPort: receivePort.sendPort,
+            process: process,
+            step: step,
+          ),
         );
-    this.receivePort.close();
+
+    return await receivePort.first;
   }
+
+  void close() => this.isolate.kill(
+        priority: Isolate.immediate,
+      );
 }

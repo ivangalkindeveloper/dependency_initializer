@@ -6,6 +6,7 @@ import 'package:dependency_initializer/src/dependency_initialization_process.dar
 import 'package:dependency_initializer/src/dependency_initialization_step.dart';
 
 part '_isolate_controller.dart';
+part '_isolate_iteration.dart';
 part '_prepare_resource.dart';
 
 class DependencyInitializer<
@@ -13,6 +14,8 @@ class DependencyInitializer<
   const DependencyInitializer({
     required this.process,
     required this.stepList,
+    this.isolateErrorsAreFatal = true,
+    this.isolateDebugName,
     this.onStart,
     this.onStartStep,
     this.onSuccessStep,
@@ -22,8 +25,10 @@ class DependencyInitializer<
 
   final Process process;
   final List<DependencyInitializationStep<Process>> stepList;
+  final bool isolateErrorsAreFatal;
+  final String? isolateDebugName;
   final void Function(
-    Completer<DependencyInitializaionResult<Result>> completer,
+    Completer<DependencyInitializaionResult<Process, Result>> completer,
   )? onStart;
   final void Function(
     DependencyInitializationStep<Process> step,
@@ -53,31 +58,20 @@ class DependencyInitializer<
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
 
-    final Completer<DependencyInitializaionResult<Result>> completer =
-        Completer<DependencyInitializaionResult<Result>>();
+    final Completer<DependencyInitializaionResult<Process, Result>> completer =
+        Completer<DependencyInitializaionResult<Process, Result>>();
     this.onStart?.call(
           completer,
         );
-    Process process = this.process;
-    DependencyInitializationStep<Process> currentStep = stepList.first;
+    Process currentProcess = this.process;
+    DependencyInitializationStep<Process> currentStep = this.stepList.first;
 
     final _PrepareResource<Process> prepareResource =
         await this._prepareResource();
     final _IsolateController? isolateController =
         prepareResource.isolateController;
-    isolateController?.receivePort.listen(
-      (
-        dynamic message,
-      ) {
-        if (message is! Process) {
-          return;
-        }
-
-        process = message;
-      },
-    );
-    final List<DependencyInitializationStep<Process>> reInitializationStepList =
-        prepareResource.reInitializationStepList;
+    final List<DependencyInitializationStep<Process>> reinitializationStepList =
+        prepareResource.reinitializationStepList;
 
     try {
       for (final DependencyInitializationStep<Process> step in this.stepList) {
@@ -86,18 +80,17 @@ class DependencyInitializer<
 
         currentStep = step;
         if (step.isIsolated) {
-          isolateController?.send(
-            process: process,
+          currentProcess = await isolateController?.send(
+            process: currentProcess,
             step: step,
           );
         } else {
           await step.initialize(
-            process,
+            currentProcess,
           );
         }
 
         stepStopWatch.stop();
-
         this.onSuccessStep?.call(
               step,
               stepStopWatch.elapsed,
@@ -108,13 +101,12 @@ class DependencyInitializer<
         error,
         stackTrace,
       );
-      stopwatch.stop();
       isolateController?.close();
-
+      stopwatch.stop();
       this.onError?.call(
             error,
             stackTrace,
-            process,
+            currentProcess,
             currentStep,
             stopwatch.elapsed,
           );
@@ -122,49 +114,18 @@ class DependencyInitializer<
     }
 
     isolateController?.close();
-    final Result result = process.toResult();
+    final Result result = currentProcess.toResult();
     completer.complete(
-      DependencyInitializaionResult<Result>(
+      DependencyInitializaionResult<Process, Result>(
         result: result,
-        reinitialization: () async {
-          assert(
-            completer.isCompleted,
-            "Previos initializion process is not completed",
-          );
-
-          final Completer<Result> reCompleter = Completer<Result>();
-          await DependencyInitializer(
-            process: this.process,
-            stepList: reInitializationStepList,
-            onStart: this.onStart,
-            onStartStep: this.onStartStep,
-            onSuccessStep: this.onSuccessStep,
-            onSuccess: (
-              Result result,
-              Duration duration,
-            ) =>
-                reCompleter.complete(
-              result,
-            ),
-            onError: (
-              Object error,
-              StackTrace stackTrace,
-              Process process,
-              DependencyInitializationStep<Process> step,
-              Duration duration,
-            ) =>
-                reCompleter.completeError(
-              error,
-              stackTrace,
-            ),
-          ).run();
-
-          return await reCompleter.future;
-        },
+        reinitializationStepList: reinitializationStepList,
+        reinitialization: this._reinitialization(
+          completer: completer,
+          result: result,
+        ),
       ),
     );
     stopwatch.stop();
-
     this.onSuccess?.call(
           result,
           stopwatch.elapsed,
@@ -173,15 +134,18 @@ class DependencyInitializer<
 
   Future<_PrepareResource<Process>> _prepareResource() async {
     _IsolateController? isolateController;
-    final List<DependencyInitializationStep<Process>> reInitializationStepList =
+    final List<DependencyInitializationStep<Process>> reinitializationStepList =
         [];
 
     for (final DependencyInitializationStep<Process> step in this.stepList) {
       if (step.isIsolated) {
-        isolateController ??= await _IsolateController.spawn();
+        isolateController ??= await _IsolateController.spawn<Process>(
+          errorsAreFatal: this.isolateErrorsAreFatal,
+          debugName: this.isolateDebugName,
+        );
       }
       if (step.isReinitialized) {
-        reInitializationStepList.add(
+        reinitializationStepList.add(
           step,
         );
       }
@@ -189,7 +153,54 @@ class DependencyInitializer<
 
     return _PrepareResource<Process>(
       isolateController: isolateController,
-      reInitializationStepList: reInitializationStepList,
+      reinitializationStepList: reinitializationStepList,
     );
   }
+
+  Future<Result> Function({
+    required List<DependencyInitializationStep<Process>> stepList,
+  }) _reinitialization({
+    required Completer<DependencyInitializaionResult<Process, Result>>
+        completer,
+    required Result result,
+  }) =>
+      ({
+        required List<DependencyInitializationStep<Process>> stepList,
+      }) async {
+        assert(
+          completer.isCompleted,
+          "Previos initialization process is not completed",
+        );
+
+        final Completer<Result> reCompleter = Completer<Result>();
+        await DependencyInitializer(
+          process: this.process,
+          stepList: stepList,
+          isolateErrorsAreFatal: this.isolateErrorsAreFatal,
+          isolateDebugName: this.isolateDebugName,
+          onStart: this.onStart,
+          onStartStep: this.onStartStep,
+          onSuccessStep: this.onSuccessStep,
+          onSuccess: (
+            Result result,
+            Duration duration,
+          ) =>
+              reCompleter.complete(
+            result,
+          ),
+          onError: (
+            Object error,
+            StackTrace stackTrace,
+            Process process,
+            DependencyInitializationStep<Process> step,
+            Duration duration,
+          ) =>
+              reCompleter.completeError(
+            error,
+            stackTrace,
+          ),
+        ).run();
+
+        return await reCompleter.future;
+      };
 }

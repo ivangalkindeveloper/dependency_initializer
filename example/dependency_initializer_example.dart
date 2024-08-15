@@ -95,7 +95,7 @@ Future<void> main() async {
     process: process,
     stepList: stepList,
     onStart: (
-      Completer<DependencyInitializaionResult<Result>> completer,
+      Completer<DependencyInitializaionResult<Process, Result>> completer,
     ) =>
         stdout.write(
       "Initializer started",

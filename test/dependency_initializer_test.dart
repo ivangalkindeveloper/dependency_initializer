@@ -219,7 +219,8 @@ Future<void> main() async {
             process: process,
             stepList: stepList,
             onStart: (
-              Completer<DependencyInitializaionResult<Result>> completer,
+              Completer<DependencyInitializaionResult<Process, Result>>
+                  completer,
             ) async {
               expect(
                 process.api,
@@ -257,7 +258,7 @@ Future<void> main() async {
       );
 
       test(
-        "Reinitializaion test",
+        "Reinitialization test",
         () async {
           stepList = [
             DefaultInitializationStep(
@@ -337,11 +338,14 @@ Future<void> main() async {
             process: process,
             stepList: stepList,
             onStart: (
-              Completer<DependencyInitializaionResult<Result>> completer,
+              Completer<DependencyInitializaionResult<Process, Result>>
+                  completer,
             ) async {
-              final DependencyInitializaionResult<Result> completeResult =
-                  await completer.future;
-              final Result newResult = await completeResult.reinitialization();
+              final DependencyInitializaionResult<Process, Result>
+                  completeResult = await completer.future;
+              final Result newResult = await completeResult.reinitialization(
+                stepList: stepList,
+              );
               expect(
                 newResult.config,
                 isNotNull,
