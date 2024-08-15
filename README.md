@@ -161,7 +161,7 @@ For example, in the runtime of a Flutter application, you need to reinitialize y
         initialize: (
           Process process,
         ) =>
-            process.config = AnotherConfig$(),
+            process.config = AnotherConfig(),
       ),
       ...initializationResult.reinitializationStepList,
     ],
