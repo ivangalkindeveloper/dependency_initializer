@@ -1,6 +1,7 @@
 part of 'dependency_initializer.dart';
 
-final class _IsolateController<Process> {
+final class _IsolateController<
+    Process extends DependencyInitializationProcess<Result>, Result> {
   const _IsolateController({
     required this.isolate,
     required this.sendPort,
@@ -9,13 +10,14 @@ final class _IsolateController<Process> {
   final Isolate isolate;
   final SendPort sendPort;
 
-  static Future<_IsolateController<Process>> spawn<Process>({
+  static Future<_IsolateController<Process, Result>>
+      spawn<Process extends DependencyInitializationProcess<Result>, Result>({
     required bool errorsAreFatal,
     required String? debugName,
   }) async {
     final ReceivePort receivePort = ReceivePort();
     final Isolate isolate = await Isolate.spawn(
-      _entry<Process>,
+      _entry<Process, Result>,
       receivePort.sendPort,
       errorsAreFatal: errorsAreFatal,
       debugName: debugName,
@@ -29,7 +31,8 @@ final class _IsolateController<Process> {
     );
   }
 
-  static void _entry<Process>(
+  static void
+      _entry<Process extends DependencyInitializationProcess<Result>, Result>(
     SendPort initializerSendPort,
   ) {
     final ReceivePort receivePort = ReceivePort();
@@ -61,7 +64,7 @@ final class _IsolateController<Process> {
   }) async {
     final ReceivePort receivePort = ReceivePort();
     this.sendPort.send(
-          _IsolateIteration(
+          _IsolateIteration<Process>(
             sendPort: receivePort.sendPort,
             process: process,
             step: step,

@@ -5,9 +5,9 @@ import 'package:dependency_initializer/src/dependency_initialization_result.dart
 import 'package:dependency_initializer/src/dependency_initialization_process.dart';
 import 'package:dependency_initializer/src/dependency_initialization_step.dart';
 
+part '_context.dart';
 part '_isolate_controller.dart';
 part '_isolate_iteration.dart';
-part '_prepare_resource.dart';
 
 class DependencyInitializer<
     Process extends DependencyInitializationProcess<Result>, Result> {
@@ -66,12 +66,11 @@ class DependencyInitializer<
     Process currentProcess = this.process;
     DependencyInitializationStep<Process> currentStep = this.stepList.first;
 
-    final _PrepareResource<Process> prepareResource =
-        await this._prepareResource();
-    final _IsolateController? isolateController =
-        prepareResource.isolateController;
+    final _Context<Process, Result> context = await this._getContext();
+    final _IsolateController<Process, Result>? isolateController =
+        context.isolateController;
     final List<DependencyInitializationStep<Process>> reinitializationStepList =
-        prepareResource.reinitializationStepList;
+        context.reinitializationStepList;
 
     try {
       for (final DependencyInitializationStep<Process> step in this.stepList) {
@@ -83,7 +82,7 @@ class DependencyInitializer<
           currentProcess = await isolateController?.send(
             process: currentProcess,
             step: step,
-          );
+          ) as Process;
         } else {
           await step.initialize(
             currentProcess,
@@ -132,14 +131,14 @@ class DependencyInitializer<
         );
   }
 
-  Future<_PrepareResource<Process>> _prepareResource() async {
-    _IsolateController? isolateController;
+  Future<_Context<Process, Result>> _getContext() async {
+    _IsolateController<Process, Result>? isolateController;
     final List<DependencyInitializationStep<Process>> reinitializationStepList =
         [];
 
     for (final DependencyInitializationStep<Process> step in this.stepList) {
       if (step.isIsolated) {
-        isolateController ??= await _IsolateController.spawn<Process>(
+        isolateController ??= await _IsolateController.spawn<Process, Result>(
           errorsAreFatal: this.isolateErrorsAreFatal,
           debugName: this.isolateDebugName,
         );
@@ -151,7 +150,7 @@ class DependencyInitializer<
       }
     }
 
-    return _PrepareResource<Process>(
+    return _Context<Process, Result>(
       isolateController: isolateController,
       reinitializationStepList: reinitializationStepList,
     );

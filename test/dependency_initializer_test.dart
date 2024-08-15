@@ -103,6 +103,7 @@ Future<void> main() async {
               Result result,
               Duration duration,
             ) {
+              // Process
               expect(
                 process.api,
                 isNotNull,
@@ -129,6 +130,20 @@ Future<void> main() async {
               );
               expect(
                 process.storage,
+                isNotNull,
+              );
+
+              // Result
+              expect(
+                result.config,
+                isNotNull,
+              );
+              expect(
+                result.repository,
+                isNotNull,
+              );
+              expect(
+                result.bloc,
                 isNotNull,
               );
             },
@@ -218,36 +233,20 @@ Future<void> main() async {
               DependencyInitializer<Process, Result>(
             process: process,
             stepList: stepList,
-            onStart: (
-              Completer<DependencyInitializaionResult<Process, Result>>
-                  completer,
-            ) async {
+            onSuccess: (
+              Result result,
+              Duration duration,
+            ) {
               expect(
-                process.api,
+                result.config,
                 isNotNull,
               );
               expect(
-                process.bloc,
+                result.repository,
                 isNotNull,
               );
               expect(
-                process.client,
-                isNotNull,
-              );
-              expect(
-                process.config,
-                isNotNull,
-              );
-              expect(
-                process.dao,
-                isNotNull,
-              );
-              expect(
-                process.repository,
-                isNotNull,
-              );
-              expect(
-                process.storage,
+                result.bloc,
                 isNotNull,
               );
             },
