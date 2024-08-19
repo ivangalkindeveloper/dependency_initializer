@@ -161,54 +161,55 @@ Future<void> main() async {
           stepList = [
             DefaultInitializationStep(
               title: "Config",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.config = Config$(),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "HttpClient",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.client = HttpClient$(
                 config: process.config!,
               ),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "Api",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.api = Api$(
                 client: process.client!,
               ),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "Dao",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.dao = Dao$(
                 config: process.config!,
               ),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "Storage",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.storage = Storage$(
                 config: process.config!,
               ),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "Repository",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
@@ -217,17 +218,16 @@ Future<void> main() async {
                 dao: process.dao!,
                 storage: process.storage!,
               ),
-              isIsolated: true,
             ),
             DefaultInitializationStep(
               title: "Bloc",
+              isIsolated: true,
               initialize: (
                 Process process,
               ) =>
                   process.bloc = Bloc(
                 repository: process.repository!,
               ),
-              isIsolated: true,
             ),
           ];
 

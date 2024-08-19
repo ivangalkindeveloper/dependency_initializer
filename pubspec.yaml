@@ -1,6 +1,6 @@
 name: dependency_initializer
 description: Initializer utility of dependencies for Dart & Flutter projects.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/ivangalkindeveloper/dependency_initializer
 
 topics:
