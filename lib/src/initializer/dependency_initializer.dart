@@ -12,7 +12,7 @@ part '_isolate_iteration.dart';
 class DependencyInitializer<
     Process extends DependencyInitializationProcess<Result>, Result> {
   const DependencyInitializer({
-    required this.process,
+    required this.createProcess,
     required this.stepList,
     this.isolateErrorsAreFatal = true,
     this.isolateDebugName,
@@ -23,7 +23,7 @@ class DependencyInitializer<
     this.onError,
   });
 
-  final Process process;
+  final Process Function() createProcess;
   final List<DependencyInitializationStep<Process>> stepList;
   final bool isolateErrorsAreFatal;
   final String? isolateDebugName;
@@ -63,7 +63,7 @@ class DependencyInitializer<
     this.onStart?.call(
           completer,
         );
-    Process currentProcess = this.process;
+    Process currentProcess = this.createProcess();
     DependencyInitializationStep<Process> currentStep = this.stepList.first;
 
     final _Context<Process, Result> context = await this._getContext();
@@ -160,7 +160,7 @@ class DependencyInitializer<
   }
 
   Future<void> Function({
-    required Process process,
+    Process Function()? createProcess,
     List<DependencyInitializationStep<Process>>? stepList,
     void Function(
       Completer<DependencyInitializationResult<Process, Result>> completer,
@@ -191,7 +191,7 @@ class DependencyInitializer<
         reinitializationStepList,
   }) =>
       ({
-        required Process process,
+        Process Function()? createProcess,
         List<DependencyInitializationStep<Process>>? stepList,
         void Function(
           Completer<DependencyInitializationResult<Process, Result>> completer,
@@ -221,7 +221,7 @@ class DependencyInitializer<
         );
 
         await DependencyInitializer(
-          process: process,
+          createProcess: createProcess ?? this.createProcess,
           stepList: stepList ?? reinitializationStepList,
           isolateErrorsAreFatal: this.isolateErrorsAreFatal,
           isolateDebugName: this.isolateDebugName,

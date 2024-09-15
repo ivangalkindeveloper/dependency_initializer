@@ -1,3 +1,6 @@
+## 1.2.0
+* Argument process > createProcess callback.
+
 ## 1.1.0
 * isReinitializaed flag > ReInitializationStep class;
 * Renaming changes.

@@ -12,7 +12,7 @@ final class DependencyInitializationResult<Process, Result> {
   final Result result;
   final List<DependencyInitializationStep<Process>> reinitializationStepList;
   final Future<void> Function({
-    required Process process,
+    Process Function()? createProcess,
     List<DependencyInitializationStep<Process>>? stepList,
     void Function(
       Completer<DependencyInitializationResult<Process, Result>> completer,

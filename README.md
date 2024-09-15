@@ -79,7 +79,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
 2) Create initializer and start initialize process:
 ```dart
   final Initializer initializer = Initializer<Process, Result>(
-    process: Process(),
+    creteProcess: () => Process(),
     stepList: [
       ...coreStepList,
       ...dataStepList,
@@ -101,7 +101,7 @@ Initializer has several use cases:
 For example, if you want the Flutter application to show a native splash screen when it starts, and then launch the first widget.
 ```dart
   final Initializer initializer = Initializer<Process, Result>(
-    process: Process(),
+    creteProcess: () => Process(),
     stepList: stepList,
     onSuccess: (
       DependencyInitializationResult<Process, Result> initializationResult,
@@ -128,7 +128,7 @@ For example, if you want the Flutter application to show a native splash screen 
 For example, you have a widget that displays its splash screen, and this widget must be rebuilt asynchronously using the initialization compiler.
 ```dart
   final Initializer initializer = Initializer<Process, Result>(
-    process: Process(),
+    creteProcess: () => Process(),
     stepList: stepList,
     onStart: (
       Completer<DependencyInitializationResult<Process, Result>> completer,
@@ -154,7 +154,6 @@ For example, you have a widget that displays its splash screen, and this widget 
 For example, in the runtime of a Flutter application, you need to reinitialize your new dependencies for the new environment and return the first widget of the Flutter application again.
 ```dart
   await initializationResult.reRun(
-    process: Process(),
     stepList: [
       InitializationStep(
         title: "Config",

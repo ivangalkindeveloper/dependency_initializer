@@ -86,7 +86,7 @@ Future<void> main() async {
 
   final DependencyInitializer initializer =
       DependencyInitializer<Process, Result>(
-    process: Process(),
+    createProcess: () => Process(),
     stepList: [
       ...coreStepList,
       ...dataStepList,

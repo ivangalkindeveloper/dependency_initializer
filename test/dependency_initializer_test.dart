@@ -97,7 +97,7 @@ Future<void> main() async {
 
           final DependencyInitializer initializer =
               DependencyInitializer<Process, Result>(
-            process: process,
+            createProcess: () => process,
             stepList: stepList,
             onSuccess: (
               DependencyInitializationResult<Process, Result>
@@ -233,7 +233,7 @@ Future<void> main() async {
 
           final DependencyInitializer initializer =
               DependencyInitializer<Process, Result>(
-            process: process,
+            createProcess: () => process,
             stepList: stepList,
             onSuccess: (
               DependencyInitializationResult<Process, Result>
@@ -331,7 +331,7 @@ Future<void> main() async {
 
           final DependencyInitializer initializer =
               DependencyInitializer<Process, Result>(
-            process: process,
+            createProcess: () => process,
             stepList: stepList,
             onSuccess: (
               DependencyInitializationResult<Process, Result>
@@ -339,7 +339,7 @@ Future<void> main() async {
               Duration duration,
             ) =>
                 initializationResult.reRun(
-              process: Process(),
+              createProcess: () => Process(),
               onSuccess: (
                 DependencyInitializationResult<Process, Result>
                     initializationResult,
