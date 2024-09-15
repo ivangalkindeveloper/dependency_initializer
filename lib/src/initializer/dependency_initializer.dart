@@ -118,9 +118,10 @@ class DependencyInitializer<
         DependencyInitializationResult<Process, Result>(
       result: result,
       reinitializationStepList: reinitializationStepList,
-      reinitialization: this._reinitialization(
+      reRun: this._reRun(
         completer: completer,
         result: result,
+        reinitializationStepList: reinitializationStepList,
       ),
     );
     completer.complete(
@@ -145,7 +146,7 @@ class DependencyInitializer<
           debugName: this.isolateDebugName,
         );
       }
-      if (step.isReinitialized) {
+      if (step is ReInitializationStep) {
         reinitializationStepList.add(
           step,
         );
@@ -160,7 +161,7 @@ class DependencyInitializer<
 
   Future<void> Function({
     required Process process,
-    required List<DependencyInitializationStep<Process>> stepList,
+    List<DependencyInitializationStep<Process>>? stepList,
     void Function(
       Completer<DependencyInitializationResult<Process, Result>> completer,
     )? onStart,
@@ -182,14 +183,16 @@ class DependencyInitializer<
       DependencyInitializationStep<Process> step,
       Duration duration,
     )? onError,
-  }) _reinitialization({
+  }) _reRun({
     required Completer<DependencyInitializationResult<Process, Result>>
         completer,
     required Result result,
+    required List<DependencyInitializationStep<Process>>
+        reinitializationStepList,
   }) =>
       ({
         required Process process,
-        required List<DependencyInitializationStep<Process>> stepList,
+        List<DependencyInitializationStep<Process>>? stepList,
         void Function(
           Completer<DependencyInitializationResult<Process, Result>> completer,
         )? onStart,
@@ -219,7 +222,7 @@ class DependencyInitializer<
 
         await DependencyInitializer(
           process: process,
-          stepList: stepList,
+          stepList: stepList ?? reinitializationStepList,
           isolateErrorsAreFatal: this.isolateErrorsAreFatal,
           isolateDebugName: this.isolateDebugName,
           onStart: onStart ?? this.onStart,

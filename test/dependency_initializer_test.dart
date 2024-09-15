@@ -30,14 +30,14 @@ Future<void> main() async {
         "Resource test",
         () async {
           stepList = [
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Config",
               initialize: (
                 Process process,
               ) =>
                   process.config = Config$(),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "HttpClient",
               initialize: (
                 Process process,
@@ -46,7 +46,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Api",
               initialize: (
                 Process process,
@@ -55,7 +55,7 @@ Future<void> main() async {
                 client: process.client!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Dao",
               initialize: (
                 Process process,
@@ -64,7 +64,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Storage",
               initialize: (
                 Process process,
@@ -73,7 +73,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Repository",
               initialize: (
                 Process process,
@@ -84,7 +84,7 @@ Future<void> main() async {
                 storage: process.storage!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Bloc",
               initialize: (
                 Process process,
@@ -159,7 +159,7 @@ Future<void> main() async {
         "Isolate test",
         () async {
           stepList = [
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Config",
               isIsolated: true,
               initialize: (
@@ -167,7 +167,7 @@ Future<void> main() async {
               ) =>
                   process.config = Config$(),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "HttpClient",
               isIsolated: true,
               initialize: (
@@ -177,7 +177,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Api",
               isIsolated: true,
               initialize: (
@@ -187,7 +187,7 @@ Future<void> main() async {
                 client: process.client!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Dao",
               isIsolated: true,
               initialize: (
@@ -197,7 +197,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Storage",
               isIsolated: true,
               initialize: (
@@ -207,7 +207,7 @@ Future<void> main() async {
                 config: process.config!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Repository",
               isIsolated: true,
               initialize: (
@@ -219,7 +219,7 @@ Future<void> main() async {
                 storage: process.storage!,
               ),
             ),
-            DefaultInitializationStep(
+            InitializationStep(
               title: "Bloc",
               isIsolated: true,
               initialize: (
@@ -264,15 +264,14 @@ Future<void> main() async {
         "Reinitialization test",
         () async {
           stepList = [
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Config",
               initialize: (
                 Process process,
               ) =>
                   process.config = Config$(),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "HttpClient",
               initialize: (
                 Process process,
@@ -280,9 +279,8 @@ Future<void> main() async {
                   process.client = HttpClient$(
                 config: process.config!,
               ),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Api",
               initialize: (
                 Process process,
@@ -290,9 +288,8 @@ Future<void> main() async {
                   process.api = Api$(
                 client: process.client!,
               ),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Dao",
               initialize: (
                 Process process,
@@ -300,9 +297,8 @@ Future<void> main() async {
                   process.dao = Dao$(
                 config: process.config!,
               ),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Storage",
               initialize: (
                 Process process,
@@ -310,9 +306,8 @@ Future<void> main() async {
                   process.storage = Storage$(
                 config: process.config!,
               ),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Repository",
               initialize: (
                 Process process,
@@ -322,9 +317,8 @@ Future<void> main() async {
                 dao: process.dao!,
                 storage: process.storage!,
               ),
-              isReinitialized: true,
             ),
-            DefaultInitializationStep(
+            ReInitializationStep(
               title: "Bloc",
               initialize: (
                 Process process,
@@ -332,7 +326,6 @@ Future<void> main() async {
                   process.bloc = Bloc(
                 repository: process.repository!,
               ),
-              isReinitialized: true,
             ),
           ];
 
@@ -344,31 +337,29 @@ Future<void> main() async {
               DependencyInitializationResult<Process, Result>
                   initializationResult,
               Duration duration,
-            ) async {
-              await initializationResult.reinitialization(
-                process: Process(),
-                stepList: stepList,
-                onSuccess: (
-                  DependencyInitializationResult<Process, Result>
-                      initializationResult,
-                  Duration duration,
-                ) {
-                  final Result result = initializationResult.result;
-                  expect(
-                    result.config,
-                    isNotNull,
-                  );
-                  expect(
-                    result.repository,
-                    isNotNull,
-                  );
-                  expect(
-                    result.bloc,
-                    isNotNull,
-                  );
-                },
-              );
-            },
+            ) =>
+                initializationResult.reRun(
+              process: Process(),
+              onSuccess: (
+                DependencyInitializationResult<Process, Result>
+                    initializationResult,
+                Duration duration,
+              ) {
+                final Result result = initializationResult.result;
+                expect(
+                  result.config,
+                  isNotNull,
+                );
+                expect(
+                  result.repository,
+                  isNotNull,
+                );
+                expect(
+                  result.bloc,
+                  isNotNull,
+                );
+              },
+            ),
           );
 
           await initializer.run();

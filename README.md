@@ -5,8 +5,8 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
 # Usage
 1) Prepare list of initialize steps:
 ```dart
-  final List<DefaultInitializationStep<Process>> coreStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> coreStepList = [
+    InitializationStep(
       title: "Config",
       initialize: (
         Process process,
@@ -14,8 +14,8 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
           process.config = Config$(),
     ),
   ];
-  final List<DefaultInitializationStep<Process>> dataStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> dataStepList = [
+    InitializationStep(
       title: "HttpClient",
       initialize: (
         Process process,
@@ -24,7 +24,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Api",
       initialize: (
         Process process,
@@ -33,7 +33,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
         client: process.client!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Dao",
       initialize: (
         Process process,
@@ -42,7 +42,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Storage",
       initialize: (
         Process process,
@@ -51,7 +51,7 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Repository",
       initialize: (
         Process process,
@@ -63,8 +63,8 @@ The utility does not depend on Flutter SDK to be able to use it for Dart project
       ),
     ),
   ];
-  final List<DefaultInitializationStep<Process>> blocStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> blocStepList = [
+    InitializationStep(
       title: "Bloc",
       initialize: (
         Process process,
@@ -153,10 +153,10 @@ For example, you have a widget that displays its splash screen, and this widget 
 3) Reinitialization from result.\
 For example, in the runtime of a Flutter application, you need to reinitialize your new dependencies for the new environment and return the first widget of the Flutter application again.
 ```dart
-  await initializationResult.reinitialization(
+  await initializationResult.reRun(
     process: Process(),
     stepList: [
-      DefaultInitializationStep(
+      InitializationStep(
         title: "Config",
         initialize: (
           Process process,

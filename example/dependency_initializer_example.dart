@@ -14,8 +14,8 @@ import 'src/process.dart';
 import 'src/result.dart';
 
 Future<void> main() async {
-  final List<DefaultInitializationStep<Process>> coreStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> coreStepList = [
+    InitializationStep(
       title: "Config",
       initialize: (
         Process process,
@@ -23,8 +23,8 @@ Future<void> main() async {
           process.config = Config$(),
     ),
   ];
-  final List<DefaultInitializationStep<Process>> dataStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> dataStepList = [
+    InitializationStep(
       title: "HttpClient",
       initialize: (
         Process process,
@@ -33,7 +33,7 @@ Future<void> main() async {
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Api",
       initialize: (
         Process process,
@@ -42,7 +42,7 @@ Future<void> main() async {
         client: process.client!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Dao",
       initialize: (
         Process process,
@@ -51,7 +51,7 @@ Future<void> main() async {
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Storage",
       initialize: (
         Process process,
@@ -60,7 +60,7 @@ Future<void> main() async {
         config: process.config!,
       ),
     ),
-    DefaultInitializationStep(
+    InitializationStep(
       title: "Repository",
       initialize: (
         Process process,
@@ -72,8 +72,8 @@ Future<void> main() async {
       ),
     ),
   ];
-  final List<DefaultInitializationStep<Process>> blocStepList = [
-    DefaultInitializationStep(
+  final List<InitializationStep<Process>> blocStepList = [
+    InitializationStep(
       title: "Bloc",
       initialize: (
         Process process,

@@ -1,20 +1,18 @@
 import 'dart:async';
 
-abstract class DependencyInitializationStep<Process> {
+sealed class DependencyInitializationStep<Process> {
   abstract final String? title;
   abstract final bool isIsolated;
-  abstract final bool isReinitialized;
   abstract final FutureOr<void> Function(
     Process progress,
   ) initialize;
 }
 
-class DefaultInitializationStep<Progress>
+class InitializationStep<Progress>
     implements DependencyInitializationStep<Progress> {
-  const DefaultInitializationStep({
+  const InitializationStep({
     this.title,
     this.isIsolated = false,
-    this.isReinitialized = false,
     required this.initialize,
   });
 
@@ -23,7 +21,23 @@ class DefaultInitializationStep<Progress>
   @override
   final bool isIsolated;
   @override
-  final bool isReinitialized;
+  final FutureOr<void> Function(
+    Progress progress,
+  ) initialize;
+}
+
+class ReInitializationStep<Progress>
+    implements DependencyInitializationStep<Progress> {
+  const ReInitializationStep({
+    this.title,
+    this.isIsolated = false,
+    required this.initialize,
+  });
+
+  @override
+  final String? title;
+  @override
+  final bool isIsolated;
   @override
   final FutureOr<void> Function(
     Progress progress,

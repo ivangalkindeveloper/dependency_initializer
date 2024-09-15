@@ -1,3 +1,7 @@
+## 1.1.0
+* isReinitializaed flag > ReInitializationStep class;
+* Renaming changes.
+
 ## 1.0.2
 * Small changes.
 

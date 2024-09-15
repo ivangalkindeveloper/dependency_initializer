@@ -6,14 +6,14 @@ final class DependencyInitializationResult<Process, Result> {
   const DependencyInitializationResult({
     required this.result,
     required this.reinitializationStepList,
-    required this.reinitialization,
+    required this.reRun,
   });
 
   final Result result;
   final List<DependencyInitializationStep<Process>> reinitializationStepList;
   final Future<void> Function({
     required Process process,
-    required List<DependencyInitializationStep<Process>> stepList,
+    List<DependencyInitializationStep<Process>>? stepList,
     void Function(
       Completer<DependencyInitializationResult<Process, Result>> completer,
     )? onStart,
@@ -35,5 +35,5 @@ final class DependencyInitializationResult<Process, Result> {
       DependencyInitializationStep<Process> step,
       Duration duration,
     )? onError,
-  }) reinitialization;
+  }) reRun;
 }
