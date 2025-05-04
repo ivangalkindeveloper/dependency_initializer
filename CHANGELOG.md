@@ -1,3 +1,6 @@
+## 2.0.1
+* Fix release for publish.
+
 ## 2.0.0
 * Adding typedefs;
 * Adding all documentation;
