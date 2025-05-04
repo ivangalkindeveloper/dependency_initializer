@@ -6,8 +6,8 @@ abstract interface class Dao {
   abstract final Config config;
 }
 
-final class Dao$ implements Dao {
-  const Dao$({
+final class MyDao implements Dao {
+  const MyDao({
     required this.config,
   });
 

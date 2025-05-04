@@ -6,8 +6,8 @@ abstract interface class HttpClient {
   abstract final Config config;
 }
 
-final class HttpClient$ implements HttpClient {
-  const HttpClient$({
+final class MyHttpClient implements HttpClient {
+  const MyHttpClient({
     required this.config,
   });
 

@@ -1,7 +1,7 @@
 import '../data/repository.dart';
 
-final class Bloc {
-  const Bloc({
+final class MyBloc {
+  const MyBloc({
     required Repository repository,
   }) : this._repository = repository;
 

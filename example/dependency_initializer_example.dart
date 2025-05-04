@@ -14,105 +14,105 @@ import 'src/process.dart';
 import 'src/result.dart';
 
 Future<void> main() async {
-  final List<InitializationStep<Process>> coreStepList = [
+  final List<InitializationStep<MyProcess>> coreStepList = [
     InitializationStep(
       title: "Config",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.config = Config$(),
+          process.config = const MyConfig(),
     ),
   ];
-  final List<InitializationStep<Process>> dataStepList = [
+  final List<InitializationStep<MyProcess>> dataStepList = [
     InitializationStep(
       title: "HttpClient",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.client = HttpClient$(
+          process.client = MyHttpClient(
         config: process.config!,
       ),
     ),
     InitializationStep(
       title: "Api",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.api = Api$(
+          process.api = MyApi(
         client: process.client!,
       ),
     ),
     InitializationStep(
       title: "Dao",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.dao = Dao$(
+          process.dao = MyDao(
         config: process.config!,
       ),
     ),
     InitializationStep(
       title: "Storage",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.storage = Storage$(
+          process.storage = MyStorage(
         config: process.config!,
       ),
     ),
     InitializationStep(
       title: "Repository",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.repository = Repository$(
+          process.repository = MyRepository(
         api: process.api!,
         dao: process.dao!,
         storage: process.storage!,
       ),
     ),
   ];
-  final List<InitializationStep<Process>> blocStepList = [
+  final List<InitializationStep<MyProcess>> blocStepList = [
     InitializationStep(
       title: "Bloc",
       initialize: (
-        Process process,
+        MyProcess process,
       ) =>
-          process.bloc = Bloc(
+          process.bloc = MyBloc(
         repository: process.repository!,
       ),
     ),
   ];
 
   final DependencyInitializer initializer =
-      DependencyInitializer<Process, Result>(
-    createProcess: () => Process(),
+      DependencyInitializer<MyProcess, MyResult>(
+    createProcess: () => MyProcess(),
     stepList: [
       ...coreStepList,
       ...dataStepList,
       ...blocStepList,
     ],
     onStart: (
-      Completer<DependencyInitializationResult<Process, Result>> completer,
+      Completer<DependencyInitializationResult<MyProcess, MyResult>> completer,
     ) =>
         stdout.write(
       "Initializer started",
     ),
     onStartStep: (
-      DependencyInitializationStep<Process> step,
+      DependencyInitializationStep<MyProcess> step,
     ) =>
         stdout.write(
       "Step started: ${step.title}",
     ),
     onSuccessStep: (
-      DependencyInitializationStep<Process> step,
+      DependencyInitializationStep<MyProcess> step,
       Duration duration,
     ) =>
         stdout.write(
       "Step finished: ${step.title} $duration",
     ),
     onSuccess: (
-      DependencyInitializationResult<Process, Result> initializationResult,
+      DependencyInitializationResult<MyProcess, MyResult> initializationResult,
       Duration duration,
     ) =>
         stdout.write(
@@ -121,8 +121,8 @@ Future<void> main() async {
     onError: (
       Object? error,
       StackTrace stackTrace,
-      Process process,
-      DependencyInitializationStep<Process> step,
+      MyProcess process,
+      DependencyInitializationStep<MyProcess> step,
       Duration duration,
     ) =>
         stdout.write(

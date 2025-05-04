@@ -1,16 +1,31 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:dependency_initializer/src/dependency_initialization_result.dart';
-import 'package:dependency_initializer/src/dependency_initialization_process.dart';
 import 'package:dependency_initializer/src/dependency_initialization_step.dart';
+import 'package:dependency_initializer/src/typedef.dart';
 
 part '_context.dart';
 part '_isolate_controller.dart';
 part '_isolate_iteration.dart';
 
-class DependencyInitializer<
-    Process extends DependencyInitializationProcess<Result>, Result> {
+/// DependencyInitializer is a convenient and understandable contract for initializing dependencies for further use.
+/// The main goal of this utility is to provide a clear assembly of a dependency container with initialization steps.
+// Advantages:
+/// 1) Convenient configuration - creating your own initialization steps and filling the initialization process;
+/// 2) Error handling and providing initialization indicators;
+/// 3) Re-initialization for steps that were created as repeated, for example, for changing the environment.
+class DependencyInitializer<Process extends DIProcess<Result>, Result> {
+  /// Creates a new instance of [DependencyInitializer].
+  ///
+  /// [createProcess] — function for creating initialization process.
+  /// [stepList] — list of initialization steps.
+  /// [isolateErrorsAreFatal] — flag that determines whether errors in isolate are fatal.
+  /// [isolateDebugName] — name for debugging isolate.
+  /// [onStart] — callback that is called when initialization starts.
+  /// [onStartStep] — callback that is called when a step starts.
+  /// [onSuccessStep] — callback that is called when a step is successfully completed.
+  /// [onSuccess] — callback that is called when initialization is successful.
+  /// [onError] — callback that is called when an error occurs.
   const DependencyInitializer({
     required this.createProcess,
     required this.stepList,
@@ -23,32 +38,52 @@ class DependencyInitializer<
     this.onError,
   });
 
+  /// Function to create a new initialization process.
   final Process Function() createProcess;
-  final List<DependencyInitializationStep<Process>> stepList;
+
+  /// List of initialization steps.
+  final List<DIStep<Process>> stepList;
+
+  /// Flag that determines whether errors in isolate are fatal.
   final bool isolateErrorsAreFatal;
+
+  /// Name for debugging isolate.
   final String? isolateDebugName;
+
+  /// Callback that is called when initialization starts.
   final void Function(
-    Completer<DependencyInitializationResult<Process, Result>> completer,
+    Completer<DIResult<Process, Result>> completer,
   )? onStart;
+
+  /// Callback that is called when a step starts.
   final void Function(
-    DependencyInitializationStep<Process> step,
+    DIStep<Process> step,
   )? onStartStep;
+
+  /// Callback that is called when a step is successfully completed.
   final void Function(
-    DependencyInitializationStep<Process> step,
+    DIStep<Process> step,
     Duration duration,
   )? onSuccessStep;
+
+  /// Callback that is called when initialization is successful.
   final void Function(
-    DependencyInitializationResult<Process, Result> result,
+    DIResult<Process, Result> result,
     Duration duration,
   )? onSuccess;
+
+  /// Callback that is called when an error occurs.
   final void Function(
     Object error,
     StackTrace stackTrace,
     Process process,
-    DependencyInitializationStep<Process> step,
+    DIStep<Process> step,
     Duration duration,
   )? onError;
 
+  /// Starts the dependency initialization process.
+  ///
+  /// May throw an error if any step fails.
   Future<void> run() async {
     assert(
       stepList.isNotEmpty,
@@ -58,31 +93,29 @@ class DependencyInitializer<
     final Stopwatch stopwatch = Stopwatch();
     stopwatch.start();
 
-    final Completer<DependencyInitializationResult<Process, Result>> completer =
-        Completer<DependencyInitializationResult<Process, Result>>();
+    final Completer<DIResult<Process, Result>> completer =
+        Completer<DIResult<Process, Result>>();
     this.onStart?.call(
           completer,
         );
     Process currentProcess = this.createProcess();
-    DependencyInitializationStep<Process> currentStep = this.stepList.first;
+    DIStep<Process> currentStep = this.stepList.first;
 
     final _Context<Process, Result> context = await this._getContext();
     final _IsolateController<Process, Result>? isolateController =
         context.isolateController;
-    final List<DependencyInitializationStep<Process>> reinitializationStepList =
-        context.reinitializationStepList;
 
     try {
-      for (final DependencyInitializationStep<Process> step in this.stepList) {
+      for (final DIStep<Process> step in this.stepList) {
+        currentStep = step;
         final Stopwatch stepStopWatch = Stopwatch();
         stepStopWatch.start();
 
-        currentStep = step;
-        if (step.isIsolated) {
-          currentProcess = await isolateController?.send(
+        if (step.isIsolated && isolateController != null) {
+          currentProcess = await isolateController.send(
             process: currentProcess,
             step: step,
-          ) as Process;
+          );
         } else {
           await step.initialize(
             currentProcess,
@@ -114,8 +147,10 @@ class DependencyInitializer<
 
     isolateController?.close();
     final Result result = currentProcess.toResult();
-    final DependencyInitializationResult<Process, Result> initializationResult =
-        DependencyInitializationResult<Process, Result>(
+    final List<DIStep<Process>> reinitializationStepList =
+        context.reinitializationStepList;
+    final DIResult<Process, Result> initializationResult =
+        DIResult<Process, Result>(
       result: result,
       reinitializationStepList: reinitializationStepList,
       reRun: this._reRun(
@@ -134,22 +169,30 @@ class DependencyInitializer<
         );
   }
 
+  /// Internal method for getting the initialization context.
+  ///
+  /// Returns [_Context] containing the isolate controller and the list of steps to reinitialize.
   Future<_Context<Process, Result>> _getContext() async {
     _IsolateController<Process, Result>? isolateController;
-    final List<DependencyInitializationStep<Process>> reinitializationStepList =
-        [];
+    final List<DIStep<Process>> reinitializationStepList = [];
 
-    for (final DependencyInitializationStep<Process> step in this.stepList) {
+    for (final DIStep<Process> step in this.stepList) {
       if (step.isIsolated) {
         isolateController ??= await _IsolateController.spawn<Process, Result>(
           errorsAreFatal: this.isolateErrorsAreFatal,
           debugName: this.isolateDebugName,
         );
       }
-      if (step is ReInitializationStep) {
-        reinitializationStepList.add(
-          step,
-        );
+
+      switch (step) {
+        case InitializationStep<Process>():
+          break;
+
+        case RepeatInitializationStep<Process>():
+          reinitializationStepList.add(
+            step,
+          );
+          break;
       }
     }
 
@@ -159,59 +202,60 @@ class DependencyInitializer<
     );
   }
 
+  /// Returns a function to re-run the initialization process.
+  ///
+  /// Used to reinitialize dependencies, for example when changing the environment.
   Future<void> Function({
     Process Function()? createProcess,
-    List<DependencyInitializationStep<Process>>? stepList,
+    List<DIStep<Process>>? stepList,
     void Function(
-      Completer<DependencyInitializationResult<Process, Result>> completer,
+      Completer<DIResult<Process, Result>> completer,
     )? onStart,
     void Function(
-      DependencyInitializationStep<Process> step,
+      DIStep<Process> step,
     )? onStartStep,
     void Function(
-      DependencyInitializationStep<Process> step,
+      DIStep<Process> step,
       Duration duration,
     )? onSuccessStep,
     void Function(
-      DependencyInitializationResult<Process, Result> result,
+      DIResult<Process, Result> result,
       Duration duration,
     )? onSuccess,
     void Function(
       Object error,
       StackTrace stackTrace,
       Process process,
-      DependencyInitializationStep<Process> step,
+      DIStep<Process> step,
       Duration duration,
     )? onError,
   }) _reRun({
-    required Completer<DependencyInitializationResult<Process, Result>>
-        completer,
+    required Completer<DIResult<Process, Result>> completer,
     required Result result,
-    required List<DependencyInitializationStep<Process>>
-        reinitializationStepList,
+    required List<DIStep<Process>> reinitializationStepList,
   }) =>
       ({
         Process Function()? createProcess,
-        List<DependencyInitializationStep<Process>>? stepList,
+        List<DIStep<Process>>? stepList,
         void Function(
-          Completer<DependencyInitializationResult<Process, Result>> completer,
+          Completer<DIResult<Process, Result>> completer,
         )? onStart,
         void Function(
-          DependencyInitializationStep<Process> step,
+          DIStep<Process> step,
         )? onStartStep,
         void Function(
-          DependencyInitializationStep<Process> step,
+          DIStep<Process> step,
           Duration duration,
         )? onSuccessStep,
         void Function(
-          DependencyInitializationResult<Process, Result> result,
+          DIResult<Process, Result> result,
           Duration duration,
         )? onSuccess,
         void Function(
           Object error,
           StackTrace stackTrace,
           Process process,
-          DependencyInitializationStep<Process> step,
+          DIStep<Process> step,
           Duration duration,
         )? onError,
       }) async {

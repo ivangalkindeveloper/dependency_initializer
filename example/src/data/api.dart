@@ -6,8 +6,8 @@ abstract interface class Api {
   abstract final HttpClient client;
 }
 
-final class Api$ implements Api {
-  const Api$({
+final class MyApi implements Api {
+  const MyApi({
     required this.client,
   });
 

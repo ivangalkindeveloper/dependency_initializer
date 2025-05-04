@@ -6,8 +6,8 @@ abstract interface class Storage {
   abstract final Config config;
 }
 
-final class Storage$ implements Storage {
-  const Storage$({
+final class MyStorage implements Storage {
+  const MyStorage({
     required this.config,
   });
 

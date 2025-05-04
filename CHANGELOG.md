@@ -1,3 +1,12 @@
+## 2.0.0
+* Adding typedefs;
+* Adding all documentation;
+* Change reRun > repeat;
+* Change ReInitializationStep > RepeatInitializationStep;
+* Update classes;
+* Update README;
+* Update LICENSE.
+
 ## 1.2.0
 * Argument process > createProcess callback.
 

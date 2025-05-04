@@ -17,68 +17,68 @@ Future<void> main() async {
   group(
     'Main test group',
     () {
-      late Process process;
-      late List<DependencyInitializationStep<Process>> stepList;
+      late MyProcess process;
+      late List<DependencyInitializationStep<MyProcess>> stepList;
 
       setUp(
         () {
-          process = Process();
+          process = MyProcess();
         },
       );
 
       test(
-        "Resource test",
+        "Main test",
         () async {
           stepList = [
             InitializationStep(
               title: "Config",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.config = Config$(),
+                  process.config = const MyConfig(),
             ),
             InitializationStep(
               title: "HttpClient",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.client = HttpClient$(
+                  process.client = MyHttpClient(
                 config: process.config!,
               ),
             ),
             InitializationStep(
               title: "Api",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.api = Api$(
+                  process.api = MyApi(
                 client: process.client!,
               ),
             ),
             InitializationStep(
               title: "Dao",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.dao = Dao$(
+                  process.dao = MyDao(
                 config: process.config!,
               ),
             ),
             InitializationStep(
               title: "Storage",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.storage = Storage$(
+                  process.storage = MyStorage(
                 config: process.config!,
               ),
             ),
             InitializationStep(
               title: "Repository",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.repository = Repository$(
+                  process.repository = MyRepository(
                 api: process.api!,
                 dao: process.dao!,
                 storage: process.storage!,
@@ -87,24 +87,24 @@ Future<void> main() async {
             InitializationStep(
               title: "Bloc",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.bloc = Bloc(
+                  process.bloc = MyBloc(
                 repository: process.repository!,
               ),
             ),
           ];
 
           final DependencyInitializer initializer =
-              DependencyInitializer<Process, Result>(
+              DependencyInitializer<MyProcess, MyResult>(
             createProcess: () => process,
             stepList: stepList,
             onSuccess: (
-              DependencyInitializationResult<Process, Result>
+              DependencyInitializationResult<MyProcess, MyResult>
                   initializationResult,
               Duration duration,
             ) {
-              // Process
+              // MyProcess
               expect(
                 process.api,
                 isNotNull,
@@ -134,8 +134,8 @@ Future<void> main() async {
                 isNotNull,
               );
 
-              // Result
-              final Result result = initializationResult.result;
+              // MyResult
+              final MyResult result = initializationResult.result;
               expect(
                 result.config,
                 isNotNull,
@@ -163,17 +163,17 @@ Future<void> main() async {
               title: "Config",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.config = Config$(),
+                  process.config = const MyConfig(),
             ),
             InitializationStep(
               title: "HttpClient",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.client = HttpClient$(
+                  process.client = MyHttpClient(
                 config: process.config!,
               ),
             ),
@@ -181,9 +181,9 @@ Future<void> main() async {
               title: "Api",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.api = Api$(
+                  process.api = MyApi(
                 client: process.client!,
               ),
             ),
@@ -191,9 +191,9 @@ Future<void> main() async {
               title: "Dao",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.dao = Dao$(
+                  process.dao = MyDao(
                 config: process.config!,
               ),
             ),
@@ -201,9 +201,9 @@ Future<void> main() async {
               title: "Storage",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.storage = Storage$(
+                  process.storage = MyStorage(
                 config: process.config!,
               ),
             ),
@@ -211,9 +211,9 @@ Future<void> main() async {
               title: "Repository",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.repository = Repository$(
+                  process.repository = MyRepository(
                 api: process.api!,
                 dao: process.dao!,
                 storage: process.storage!,
@@ -223,24 +223,24 @@ Future<void> main() async {
               title: "Bloc",
               isIsolated: true,
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.bloc = Bloc(
+                  process.bloc = MyBloc(
                 repository: process.repository!,
               ),
             ),
           ];
 
           final DependencyInitializer initializer =
-              DependencyInitializer<Process, Result>(
+              DependencyInitializer<MyProcess, MyResult>(
             createProcess: () => process,
             stepList: stepList,
             onSuccess: (
-              DependencyInitializationResult<Process, Result>
+              DependencyInitializationResult<MyProcess, MyResult>
                   initializationResult,
               Duration duration,
             ) {
-              final Result result = initializationResult.result;
+              final MyResult result = initializationResult.result;
               expect(
                 result.config,
                 isNotNull,
@@ -264,88 +264,88 @@ Future<void> main() async {
         "Reinitialization test",
         () async {
           stepList = [
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Config",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.config = Config$(),
+                  process.config = const MyConfig(),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "HttpClient",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.client = HttpClient$(
+                  process.client = MyHttpClient(
                 config: process.config!,
               ),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Api",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.api = Api$(
+                  process.api = MyApi(
                 client: process.client!,
               ),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Dao",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.dao = Dao$(
+                  process.dao = MyDao(
                 config: process.config!,
               ),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Storage",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.storage = Storage$(
+                  process.storage = MyStorage(
                 config: process.config!,
               ),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Repository",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.repository = Repository$(
+                  process.repository = MyRepository(
                 api: process.api!,
                 dao: process.dao!,
                 storage: process.storage!,
               ),
             ),
-            ReInitializationStep(
+            RepeatInitializationStep(
               title: "Bloc",
               initialize: (
-                Process process,
+                MyProcess process,
               ) =>
-                  process.bloc = Bloc(
+                  process.bloc = MyBloc(
                 repository: process.repository!,
               ),
             ),
           ];
 
           final DependencyInitializer initializer =
-              DependencyInitializer<Process, Result>(
+              DependencyInitializer<MyProcess, MyResult>(
             createProcess: () => process,
             stepList: stepList,
             onSuccess: (
-              DependencyInitializationResult<Process, Result>
+              DependencyInitializationResult<MyProcess, MyResult>
                   initializationResult,
               Duration duration,
             ) =>
                 initializationResult.reRun(
-              createProcess: () => Process(),
+              createProcess: () => MyProcess(),
               onSuccess: (
-                DependencyInitializationResult<Process, Result>
+                DependencyInitializationResult<MyProcess, MyResult>
                     initializationResult,
                 Duration duration,
               ) {
-                final Result result = initializationResult.result;
+                final MyResult result = initializationResult.result;
                 expect(
                   result.config,
                   isNotNull,

@@ -10,8 +10,8 @@ abstract interface class Repository {
   abstract final Storage storage;
 }
 
-final class Repository$ extends Repository {
-  const Repository$({
+final class MyRepository extends Repository {
+  const MyRepository({
     required this.api,
     required this.dao,
     required this.storage,

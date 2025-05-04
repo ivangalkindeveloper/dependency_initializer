@@ -9,17 +9,17 @@ import 'data/repository.dart';
 import 'data/storage.dart';
 import 'result.dart';
 
-final class Process extends DependencyInitializationProcess<Result> {
+final class MyProcess extends DependencyInitializationProcess<MyResult> {
   Config? config;
   HttpClient? client;
   Api? api;
   Dao? dao;
   Storage? storage;
   Repository? repository;
-  Bloc? bloc;
+  MyBloc? bloc;
 
   @override
-  Result toResult() {
+  MyResult toResult() {
     assert(
       this.config != null,
     );
@@ -30,7 +30,7 @@ final class Process extends DependencyInitializationProcess<Result> {
       this.bloc != null,
     );
 
-    return Result(
+    return MyResult(
       config: this.config!,
       repository: this.repository!,
       bloc: this.bloc!,

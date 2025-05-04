@@ -1,17 +1,31 @@
 part of 'dependency_initializer.dart';
 
-final class _IsolateController<
-    Process extends DependencyInitializationProcess<Result>, Result> {
-  const _IsolateController({
+/// Inner class that manages the lifecycle of an isolate for dependency initialization.
+///
+/// This class is responsible for creating and managing an isolate that can execute
+/// initialization steps in isolation from the main isolate.
+final class _IsolateController<Process extends DIProcess<Result>, Result> {
+  /// Creates a new [_IsolateController] instance.
+  ///
+  /// [isolate] - the isolate instance to be controlled.
+  /// [sendPort] - port for sending messages to the isolate.
+  const _IsolateController._({
     required this.isolate,
     required this.sendPort,
   });
 
+  /// The isolate instance being controlled.
   final Isolate isolate;
+
+  /// Port for sending messages to the isolate.
   final SendPort sendPort;
 
+  /// Spawns a new isolate and returns a controller for it.
+  ///
+  /// [errorsAreFatal] - whether errors in the isolate should be fatal.
+  /// [debugName] - optional name for debugging purposes.
   static Future<_IsolateController<Process, Result>>
-      spawn<Process extends DependencyInitializationProcess<Result>, Result>({
+      spawn<Process extends DIProcess<Result>, Result>({
     required bool errorsAreFatal,
     required String? debugName,
   }) async {
@@ -25,14 +39,16 @@ final class _IsolateController<
     final SendPort sendPort = await receivePort.first;
     receivePort.close();
 
-    return _IsolateController(
+    return _IsolateController._(
       isolate: isolate,
       sendPort: sendPort,
     );
   }
 
-  static void
-      _entry<Process extends DependencyInitializationProcess<Result>, Result>(
+  /// Entry point for the isolate.
+  ///
+  /// Sets up message handling for initialization steps in the isolate.
+  static void _entry<Process extends DIProcess<Result>, Result>(
     SendPort initializerSendPort,
   ) {
     final ReceivePort receivePort = ReceivePort();
@@ -58,9 +74,14 @@ final class _IsolateController<
     );
   }
 
+  /// Sends an initialization step to be executed in the isolate.
+  ///
+  /// [process] - the current state of the initialization process.
+  /// [step] - the initialization step to be executed.
+  /// Returns the updated process state after step execution.
   Future<Process> send({
     required Process process,
-    required DependencyInitializationStep<Process> step,
+    required DIStep<Process> step,
   }) async {
     final ReceivePort receivePort = ReceivePort();
     this.sendPort.send(
@@ -74,6 +95,7 @@ final class _IsolateController<
     return await receivePort.first;
   }
 
+  /// Closes the isolate and releases its resources.
   void close() => this.isolate.kill(
         priority: Isolate.immediate,
       );

@@ -2,8 +2,8 @@ import 'bloc/bloc.dart';
 import 'core/config.dart';
 import 'data/repository.dart';
 
-final class Result {
-  const Result({
+final class MyResult {
+  const MyResult({
     required this.config,
     required this.repository,
     required this.bloc,
@@ -11,5 +11,5 @@ final class Result {
 
   final Config config;
   final Repository repository;
-  final Bloc bloc;
+  final MyBloc bloc;
 }
