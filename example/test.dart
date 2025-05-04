@@ -5,8 +5,8 @@ void main() async {
   final controller = IsolateController();
   await controller.startIsolate();
 
-  controller.sendTask('Задача 1');
-  controller.sendTask('Задача 2');
+  controller.sendTask('Task 1');
+  controller.sendTask('Task 2');
 
   await Future.delayed(Duration(seconds: 5));
   controller.close();
@@ -27,7 +27,7 @@ class IsolateController {
 
     // Слушаем сообщения из изолята
     _receivePort.listen((message) {
-      print('Получено сообщение от изолята: $message');
+      print('Get message from isolate: $message');
     });
   }
 
@@ -37,9 +37,9 @@ class IsolateController {
 
     receivePort.listen((message) {
       // Выполняем задачу и отправляем ответ обратно
-      print('Выполняется: $message');
+      print('Running: $message');
       // Отправляем ответ обратно в главный изолят
-      initialReplyTo.send('Завершено: $message');
+      initialReplyTo.send('Done: $message');
     });
   }
 

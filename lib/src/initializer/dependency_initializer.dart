@@ -153,7 +153,7 @@ class DependencyInitializer<Process extends DIProcess<Result>, Result> {
         DIResult<Process, Result>(
       result: result,
       reinitializationStepList: reinitializationStepList,
-      reRun: this._reRun(
+      repeat: this._repeat(
         completer: completer,
         result: result,
         reinitializationStepList: reinitializationStepList,
@@ -229,7 +229,7 @@ class DependencyInitializer<Process extends DIProcess<Result>, Result> {
       DIStep<Process> step,
       Duration duration,
     )? onError,
-  }) _reRun({
+  }) _repeat({
     required Completer<DIResult<Process, Result>> completer,
     required Result result,
     required List<DIStep<Process>> reinitializationStepList,

@@ -338,7 +338,7 @@ Future<void> main() async {
                   initializationResult,
               Duration duration,
             ) =>
-                initializationResult.reRun(
+                initializationResult.repeat(
               createProcess: () => MyProcess(),
               onSuccess: (
                 DependencyInitializationResult<MyProcess, MyResult>

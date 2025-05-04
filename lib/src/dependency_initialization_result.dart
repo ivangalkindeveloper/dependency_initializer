@@ -16,7 +16,7 @@ final class DependencyInitializationResult<Process, Result> {
   const DependencyInitializationResult({
     required this.result,
     required this.reinitializationStepList,
-    required this.reRun,
+    required this.repeat,
   });
 
   /// The final result of the initialization process.
@@ -59,5 +59,5 @@ final class DependencyInitializationResult<Process, Result> {
       DependencyInitializationStep<Process> step,
       Duration duration,
     )? onError,
-  }) reRun;
+  }) repeat;
 }
