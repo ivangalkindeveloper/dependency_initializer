@@ -8,7 +8,7 @@ import 'package:example/widget/error_application.dart';
 import 'package:flutter/cupertino.dart';
 
 Future<void> main() =>
-    DependencyInitializer(
+    DependencyInitializer<InitializationProcess, Dependency>(
       createProcess: () => InitializationProcess(),
       steps: [
         InitializationStep<InitializationProcess, Dependency>(

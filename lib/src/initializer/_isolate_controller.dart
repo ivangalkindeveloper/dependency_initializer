@@ -1,5 +1,9 @@
 part of 'dependency_initializer.dart';
 
+/// Internal class that manages the execution of isolated initialization steps.
+///
+/// This class handles the creation and management of isolates for running
+/// initialization steps in separate threads.
 final class _IsolateController<Process extends DIProcess<T>, T> {
   _IsolateController({
     required this.onError,
@@ -42,7 +46,10 @@ final class _IsolateController<Process extends DIProcess<T>, T> {
     );
   }
 
+  /// The current initialization context.
   _Context<Process, T>? context;
+
+  /// Callback function to handle errors during isolated step execution.
   final void Function(
     Object error,
     StackTrace stackTrace,
@@ -50,14 +57,22 @@ final class _IsolateController<Process extends DIProcess<T>, T> {
     DIStep step,
     Duration duration,
   )? onError;
+
+  /// Port for receiving messages from isolates.
   final ReceivePort _receivePort = ReceivePort();
+
+  /// Map of completers for tracking the completion of isolated steps.
   final Map<int, Completer<void>> _completersById = {};
 
+  /// Synchronizes the context with the isolate controller.
   void syncContext({
     required _Context<Process, T> context,
   }) =>
       this.context = context;
 
+  /// Executes all isolated initialization steps in separate isolates.
+  ///
+  /// Creates a new isolate for each step and waits for all steps to complete.
   Future<void> executeSteps() async {
     final _Context<Process, T>? context = this.context;
     if (context == null) {
@@ -101,6 +116,10 @@ final class _IsolateController<Process extends DIProcess<T>, T> {
     );
   }
 
+  /// Entry point for isolated initialization steps.
+  ///
+  /// Runs the initialization step in a separate isolate and sends the result
+  /// back through the send port.
   static void _entry<Process extends DIProcess<T>, T>(
     _IsolateRequest<Process, T, dynamic, dynamic> request,
   ) async {
@@ -128,6 +147,7 @@ final class _IsolateController<Process extends DIProcess<T>, T> {
     }
   }
 
+  /// Closes all pending completers.
   void _closeCompleters() {
     for (final Completer completer in _completersById.values) {
       if (completer.isCompleted) {
@@ -137,6 +157,7 @@ final class _IsolateController<Process extends DIProcess<T>, T> {
     }
   }
 
+  /// Closes the isolate controller and cleans up resources.
   void close() {
     context = null;
     _receivePort.close();

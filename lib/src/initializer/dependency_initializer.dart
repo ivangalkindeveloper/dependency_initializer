@@ -10,7 +10,8 @@ part '_isolate_message.dart';
 
 /// DependencyInitializer is a convenient and understandable contract for initializing dependencies for further use.
 /// The main goal of this utility is to provide a clear assembly of a dependency container with initialization steps.
-// Advantages:
+///
+/// Advantages:
 /// 1) Convenient configuration - creating your own initialization steps and filling the initialization process;
 /// 2) Error handling and providing initialization indicators;
 /// 3) Re-initialization for steps that were created as repeated, for example, for changing the environment.
@@ -95,6 +96,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
     );
   }
 
+  /// Creates and initializes the context for the initialization process.
   _Context<Process, T> _getContext() {
     final Process process = this.createProcess();
     final Completer<DIResult<Process, T>> completer =
@@ -148,6 +150,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
     return context;
   }
 
+  /// Executes regular initialization steps in the main isolate.
   Future<void> _executeSteps({
     required _Context<Process, T> context,
   }) async {
@@ -193,6 +196,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
     }
   }
 
+  /// Executes isolated initialization steps in separate isolates.
   Future<void> _executeIsolatedSteps({
     required _Context<Process, T> context,
   }) async {
@@ -210,6 +214,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
     );
   }
 
+  /// Handles successful completion of the initialization process.
   void _executeSuccess({
     required _Context<Process, T> context,
   }) {
@@ -234,6 +239,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
         );
   }
 
+  /// Creates a function for repeating the initialization process.
   DIRepeatFunction<Process, T> _runRepeat({
     required _Context<Process, T> context,
   }) =>
