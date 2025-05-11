@@ -3,114 +3,75 @@ import 'dart:async';
 import 'package:dependency_initializer/dependency_initializer.dart';
 import 'package:test/test.dart';
 
-import '../example/src/bloc/bloc.dart';
-import '../example/src/core/config.dart';
-import '../example/src/data/api.dart';
-import '../example/src/data/dao.dart';
-import '../example/src/data/http_client.dart';
-import '../example/src/data/repository.dart';
-import '../example/src/data/storage.dart';
-import '../example/src/process.dart';
-import '../example/src/result.dart';
+import 'dependency_initializer_test_data.dart';
+import 'dependency_initializer_test_dependency.dart';
+import 'dependency_initializer_test_domain.dart';
+import 'dependency_initializrt_test_process.dart';
 
-Future<void> main() async {
+void main() {
+  IsolatedInitializationStep<InitializationProcess, Dependency, String, CatFact>
+      getIsolatedStep(
+    int index,
+    int second, {
+    DIStepType type = DIStepType.simple,
+  }) =>
+          IsolatedInitializationStep<InitializationProcess, Dependency, String,
+              CatFact>(
+            title: "Cat Fact $index",
+            type: type,
+            isolatedKey: "InitialCatFact$index",
+            run: (InitializationProcess process) async {
+              await Future.delayed(Duration(seconds: second));
+              return CatFact(
+                fact: "Cat fact $index",
+                length: 0,
+              );
+            },
+          );
+
   group(
-    'Main test group',
+    'Main group',
     () {
-      late MyProcess process;
-      late List<DependencyInitializationStep<MyProcess>> stepList;
+      late InitializationProcess process;
+      late List<DependencyInitializationStep> steps;
 
       setUp(
         () {
-          process = MyProcess();
+          process = InitializationProcess();
         },
       );
 
       test(
-        "Main test",
+        "Data step test",
         () async {
-          stepList = [
-            InitializationStep(
-              title: "Config",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.config = const MyConfig(),
-            ),
-            InitializationStep(
-              title: "HttpClient",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.client = MyHttpClient(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Api",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.api = MyApi(
-                client: process.client!,
-              ),
-            ),
-            InitializationStep(
-              title: "Dao",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.dao = MyDao(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Storage",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.storage = MyStorage(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Repository",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.repository = MyRepository(
-                api: process.api!,
-                dao: process.dao!,
-                storage: process.storage!,
-              ),
-            ),
-            InitializationStep(
-              title: "Bloc",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.bloc = MyBloc(
-                repository: process.repository!,
-              ),
+          steps = [
+            InitializationStep<InitializationProcess, Dependency>(
+              title: "Data",
+              run: (InitializationProcess process) {
+                process.environment = const BaseEnvironment();
+                process.client = HttpClient(environment: process.environment!);
+                process.api = EntityApi(client: process.client!);
+                process.database = EntityDatabase(
+                  environment: process.environment!,
+                );
+                process.repository = EntityRepository(
+                  api: process.api!,
+                  database: process.database!,
+                );
+              },
             ),
           ];
 
-          final DependencyInitializer initializer =
-              DependencyInitializer<MyProcess, MyResult>(
+          await DependencyInitializer<InitializationProcess, Dependency>(
             createProcess: () => process,
-            stepList: stepList,
+            steps: steps,
             onSuccess: (
-              DependencyInitializationResult<MyProcess, MyResult>
-                  initializationResult,
+              DependencyInitializationResult<InitializationProcess, Dependency>
+                  result,
               Duration duration,
             ) {
-              // MyProcess
               expect(
-                process.api,
-                isNotNull,
-              );
-              expect(
-                process.bloc,
+                process.environment,
                 isNotNull,
               );
               expect(
@@ -118,251 +79,196 @@ Future<void> main() async {
                 isNotNull,
               );
               expect(
-                process.config,
+                process.api,
                 isNotNull,
               );
               expect(
-                process.dao,
+                process.database,
                 isNotNull,
               );
               expect(
                 process.repository,
                 isNotNull,
               );
-              expect(
-                process.storage,
-                isNotNull,
-              );
 
-              // MyResult
-              final MyResult result = initializationResult.result;
+              final Dependency dependency = result.container;
               expect(
-                result.config,
+                dependency.environment,
                 isNotNull,
               );
               expect(
-                result.repository,
-                isNotNull,
-              );
-              expect(
-                result.bloc,
+                dependency.repository,
                 isNotNull,
               );
             },
-          );
-
-          await initializer.run();
+          ).run();
         },
       );
 
       test(
-        "Isolate test",
+        "Isolated step test",
         () async {
-          stepList = [
-            InitializationStep(
-              title: "Config",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.config = const MyConfig(),
+          steps = [
+            InitializationStep<InitializationProcess, Dependency>(
+              title: "Data",
+              run: (InitializationProcess process) {
+                process.environment = const BaseEnvironment();
+                process.client = HttpClient(environment: process.environment!);
+                process.api = EntityApi(client: process.client!);
+                process.database = EntityDatabase(
+                  environment: process.environment!,
+                );
+                process.repository = EntityRepository(
+                  api: process.api!,
+                  database: process.database!,
+                );
+              },
             ),
-            InitializationStep(
-              title: "HttpClient",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.client = MyHttpClient(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Api",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.api = MyApi(
-                client: process.client!,
-              ),
-            ),
-            InitializationStep(
-              title: "Dao",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.dao = MyDao(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Storage",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.storage = MyStorage(
-                config: process.config!,
-              ),
-            ),
-            InitializationStep(
-              title: "Repository",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.repository = MyRepository(
-                api: process.api!,
-                dao: process.dao!,
-                storage: process.storage!,
-              ),
-            ),
-            InitializationStep(
-              title: "Bloc",
-              isIsolated: true,
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.bloc = MyBloc(
-                repository: process.repository!,
-              ),
-            ),
+            getIsolatedStep(0, 1),
+            getIsolatedStep(1, 3),
+            getIsolatedStep(2, 2),
           ];
 
-          final DependencyInitializer initializer =
-              DependencyInitializer<MyProcess, MyResult>(
+          await DependencyInitializer<InitializationProcess, Dependency>(
             createProcess: () => process,
-            stepList: stepList,
+            steps: steps,
             onSuccess: (
-              DependencyInitializationResult<MyProcess, MyResult>
-                  initializationResult,
+              DependencyInitializationResult<InitializationProcess, Dependency>
+                  result,
               Duration duration,
             ) {
-              final MyResult result = initializationResult.result;
+              final Dependency dependency = result.container;
               expect(
-                result.config,
+                dependency.initialCatFact0,
                 isNotNull,
               );
               expect(
-                result.repository,
+                dependency.initialCatFact1,
                 isNotNull,
               );
               expect(
-                result.bloc,
+                dependency.initialCatFact2,
                 isNotNull,
               );
             },
-          );
-
-          await initializer.run();
+          ).run();
         },
       );
 
       test(
         "Reinitialization test",
         () async {
-          stepList = [
-            RepeatInitializationStep(
-              title: "Config",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.config = const MyConfig(),
-            ),
-            RepeatInitializationStep(
-              title: "HttpClient",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.client = MyHttpClient(
-                config: process.config!,
-              ),
-            ),
-            RepeatInitializationStep(
-              title: "Api",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.api = MyApi(
-                client: process.client!,
-              ),
-            ),
-            RepeatInitializationStep(
-              title: "Dao",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.dao = MyDao(
-                config: process.config!,
-              ),
-            ),
-            RepeatInitializationStep(
-              title: "Storage",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.storage = MyStorage(
-                config: process.config!,
-              ),
-            ),
-            RepeatInitializationStep(
-              title: "Repository",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.repository = MyRepository(
-                api: process.api!,
-                dao: process.dao!,
-                storage: process.storage!,
-              ),
-            ),
-            RepeatInitializationStep(
-              title: "Bloc",
-              initialize: (
-                MyProcess process,
-              ) =>
-                  process.bloc = MyBloc(
-                repository: process.repository!,
-              ),
-            ),
-          ];
-
-          final DependencyInitializer initializer =
-              DependencyInitializer<MyProcess, MyResult>(
-            createProcess: () => process,
-            stepList: stepList,
-            onSuccess: (
-              DependencyInitializationResult<MyProcess, MyResult>
-                  initializationResult,
-              Duration duration,
-            ) =>
-                initializationResult.repeat(
-              createProcess: () => MyProcess(),
-              onSuccess: (
-                DependencyInitializationResult<MyProcess, MyResult>
-                    initializationResult,
-                Duration duration,
-              ) {
-                final MyResult result = initializationResult.result;
-                expect(
-                  result.config,
-                  isNotNull,
+          steps = [
+            InitializationStep<InitializationProcess, Dependency>(
+              title: "Data",
+              type: DIStepType.repeatable,
+              run: (InitializationProcess process) {
+                process.environment = const BaseEnvironment();
+                process.client = HttpClient(environment: process.environment!);
+                process.api = EntityApi(client: process.client!);
+                process.database = EntityDatabase(
+                  environment: process.environment!,
                 );
-                expect(
-                  result.repository,
-                  isNotNull,
-                );
-                expect(
-                  result.bloc,
-                  isNotNull,
+                process.repository = EntityRepository(
+                  api: process.api!,
+                  database: process.database!,
                 );
               },
             ),
-          );
+            getIsolatedStep(0, 1, type: DIStepType.repeatable),
+            getIsolatedStep(1, 3, type: DIStepType.repeatable),
+            getIsolatedStep(2, 2, type: DIStepType.repeatable),
+          ];
 
-          await initializer.run();
+          await DependencyInitializer<InitializationProcess, Dependency>(
+            createProcess: () => process,
+            steps: steps,
+            onSuccess: (
+              DependencyInitializationResult<InitializationProcess, Dependency>
+                  result,
+              Duration duration,
+            ) async {
+              expect(
+                process.environment,
+                isNotNull,
+              );
+              expect(
+                process.client,
+                isNotNull,
+              );
+              expect(
+                process.api,
+                isNotNull,
+              );
+              expect(
+                process.database,
+                isNotNull,
+              );
+              expect(
+                process.repository,
+                isNotNull,
+              );
+
+              final Dependency dependency = result.container;
+              expect(
+                dependency.initialCatFact0,
+                isNotNull,
+              );
+              expect(
+                dependency.initialCatFact1,
+                isNotNull,
+              );
+              expect(
+                dependency.initialCatFact2,
+                isNotNull,
+              );
+
+              process = InitializationProcess();
+              await result.runRepeat(
+                onSuccess: (
+                  DependencyInitializationResult<InitializationProcess,
+                          Dependency>
+                      result,
+                  Duration duration,
+                ) {
+                  expect(
+                    process.environment,
+                    isNotNull,
+                  );
+                  expect(
+                    process.client,
+                    isNotNull,
+                  );
+                  expect(
+                    process.api,
+                    isNotNull,
+                  );
+                  expect(
+                    process.database,
+                    isNotNull,
+                  );
+                  expect(
+                    process.repository,
+                    isNotNull,
+                  );
+
+                  final Dependency dependency = result.container;
+                  expect(
+                    dependency.initialCatFact0,
+                    isNotNull,
+                  );
+                  expect(
+                    dependency.initialCatFact1,
+                    isNotNull,
+                  );
+                  expect(
+                    dependency.initialCatFact2,
+                    isNotNull,
+                  );
+                },
+              );
+            },
+          ).run();
         },
       );
     },

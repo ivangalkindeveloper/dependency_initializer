@@ -1,27 +1,54 @@
 part of 'dependency_initializer.dart';
 
-/// Inner class that stores dependency initialization context.
-///
-/// This class contains an isolation controller for performing isolated initialization steps
-/// and a list of steps that can be re-executed if necessary.
-final class _Context<Process extends DIProcess<Result>, Result> {
-  /// Creates a new [_Context] instance.
-  ///
-  /// [isolateController] - an isolation controller for executing isolated steps.
-  /// [reinitializationStepList] - a list of steps that can be re-executed.
-  const _Context({
+final class _Context<Process extends DIProcess<T>, T> {
+  _Context({
+    required this.process,
+    required this.completer,
+    required this.stopwatch,
     required this.isolateController,
-    required this.reinitializationStepList,
+    required this.isolatedResults,
+    required this.steps,
+    required this.isolatedSteps,
+    required this.repeatSteps,
   });
 
-  /// Isolation controller for performing isolated initialization steps.
-  ///
-  /// If null, then there are no steps that require isolation.
-  final _IsolateController<Process, Result>? isolateController;
+  final Process process;
+  final Completer<DIResult<Process, T>> completer;
+  final Stopwatch stopwatch;
+  final _IsolateController<Process, T>? isolateController;
+  final Map<dynamic, dynamic> isolatedResults;
+  final List<InitializationStep<Process, T>> steps;
+  final List<IsolatedInitializationStep<Process, T, dynamic, dynamic>>
+      isolatedSteps;
+  final List<DIStep> repeatSteps;
+  Object? error;
+  StackTrace? stackTrace;
 
-  /// List of steps that can be re-executed.
-  ///
-  /// These steps are used when dependencies need to be reinitialized,
-  /// for example when the environment changes.
-  final List<DIStep<Process>> reinitializationStepList;
+  void start() {
+    stopwatch.start();
+  }
+
+  void catchError(
+    Object error,
+    StackTrace? stackTrace,
+  ) {
+    stopwatch.stop();
+    completer.completeError(
+      error,
+      stackTrace,
+    );
+    this.isolateController?.close();
+    error = error;
+    stackTrace = stackTrace;
+  }
+
+  void finish(
+    DIResult<Process, T> result,
+  ) {
+    completer.complete(
+      result,
+    );
+    stopwatch.stop();
+    this.isolateController?.close();
+  }
 }

@@ -1,72 +1,51 @@
 import 'dart:async';
 
+import 'package:dependency_initializer/src/typedef.dart';
+
 /// Sealed class that represents a single step in the dependency initialization process.
 ///
 /// This class defines the structure of an initialization step, including its title,
 /// isolation requirements, and initialization function.
-sealed class DependencyInitializationStep<Process> {
-  /// Creates a new [DependencyInitializationStep] instance.
-  ///
-  /// [title] - optional title of the step for identification and logging.
-  /// [isIsolated] - whether the step should be executed in an isolate.
-  /// [initialize] - function that performs the actual initialization.
+sealed class DependencyInitializationStep {
   const DependencyInitializationStep({
-    required this.title,
-    required this.isIsolated,
-    required this.initialize,
+    this.title,
+    this.type = DIStepType.simple,
   });
 
-  /// Optional title of the step for identification and logging.
   final String? title;
-
-  /// Whether the step should be executed in an isolate.
-  ///
-  /// If true, the step will be executed in a separate isolate to prevent
-  /// blocking the main thread.
-  final bool isIsolated;
-
-  /// Function that performs the actual initialization.
-  ///
-  /// This function receives the current state of the initialization process
-  /// and can modify it as needed.
-  final FutureOr<void> Function(
-    Process progress,
-  ) initialize;
+  final DIStepType type;
 }
 
-/// Class that represents a regular initialization step.
-///
-/// This class is used for steps that are executed only once during the initial
-/// dependency initialization process.
-class InitializationStep<Progress>
-    extends DependencyInitializationStep<Progress> {
-  /// Creates a new [InitializationStep] instance.
-  ///
-  /// [title] - optional title of the step for identification and logging.
-  /// [isIsolated] - whether the step should be executed in an isolate.
-  /// [initialize] - function that performs the actual initialization.
+final class InitializationStep<Process extends DIProcess<T>, T> extends DIStep {
   const InitializationStep({
     super.title,
-    super.isIsolated = false,
-    required super.initialize,
+    super.type,
+    required this.run,
   });
+
+  final FutureOr<void> Function(
+    Process process,
+  ) run;
 }
 
-/// Class that represents a reinitialization step.
-///
-/// This class is used for steps that can be executed multiple times,
-/// for example when the environment changes and dependencies need to be
-/// reinitialized.
-class RepeatInitializationStep<Progress>
-    extends DependencyInitializationStep<Progress> {
-  /// Creates a new [RepeatInitializationStep] instance.
-  ///
-  /// [title] - optional title of the step for identification and logging.
-  /// [isIsolated] - whether the step should be executed in an isolate.
-  /// [initialize] - function that performs the actual initialization.
-  const RepeatInitializationStep({
+final class IsolatedInitializationStep<
+    Process extends DIProcess<T>,
+    T,
+    IsolatedKey extends dynamic,
+    IsolatedResult extends dynamic> extends DIStep {
+  const IsolatedInitializationStep({
     super.title,
-    super.isIsolated = false,
-    required super.initialize,
+    super.type,
+    this.errorsAreFatal = true,
+    this.debugName,
+    required this.isolatedKey,
+    required this.run,
   });
+
+  final bool errorsAreFatal;
+  final String? debugName;
+  final IsolatedKey isolatedKey;
+  final FutureOr<IsolatedResult> Function(
+    Process process,
+  ) run;
 }

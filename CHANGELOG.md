@@ -1,3 +1,8 @@
+## 3.0.0
+* Changing API;
+* Refactoring on parallel steps;
+* Update README.
+
 ## 2.0.2
 * Fix release for publish.
 

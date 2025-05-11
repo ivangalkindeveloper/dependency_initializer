@@ -1,102 +1,146 @@
 part of 'dependency_initializer.dart';
 
-/// Inner class that manages the lifecycle of an isolate for dependency initialization.
-///
-/// This class is responsible for creating and managing an isolate that can execute
-/// initialization steps in isolation from the main isolate.
-final class _IsolateController<Process extends DIProcess<Result>, Result> {
-  /// Creates a new [_IsolateController] instance.
-  ///
-  /// [isolate] - the isolate instance to be controlled.
-  /// [sendPort] - port for sending messages to the isolate.
-  const _IsolateController._({
-    required this.isolate,
-    required this.sendPort,
-  });
-
-  /// The isolate instance being controlled.
-  final Isolate isolate;
-
-  /// Port for sending messages to the isolate.
-  final SendPort sendPort;
-
-  /// Spawns a new isolate and returns a controller for it.
-  ///
-  /// [errorsAreFatal] - whether errors in the isolate should be fatal.
-  /// [debugName] - optional name for debugging purposes.
-  static Future<_IsolateController<Process, Result>>
-      spawn<Process extends DIProcess<Result>, Result>({
-    required bool errorsAreFatal,
-    required String? debugName,
-  }) async {
-    final ReceivePort receivePort = ReceivePort();
-    final Isolate isolate = await Isolate.spawn(
-      _entry<Process, Result>,
-      receivePort.sendPort,
-      errorsAreFatal: errorsAreFatal,
-      debugName: debugName,
-    );
-    final SendPort sendPort = await receivePort.first;
-    receivePort.close();
-
-    return _IsolateController._(
-      isolate: isolate,
-      sendPort: sendPort,
-    );
-  }
-
-  /// Entry point for the isolate.
-  ///
-  /// Sets up message handling for initialization steps in the isolate.
-  static void _entry<Process extends DIProcess<Result>, Result>(
-    SendPort initializerSendPort,
-  ) {
-    final ReceivePort receivePort = ReceivePort();
-    initializerSendPort.send(
-      receivePort.sendPort,
-    );
-    receivePort.listen(
+final class _IsolateController<Process extends DIProcess<T>, T> {
+  _IsolateController({
+    required this.onError,
+  }) {
+    _receivePort.listen(
       (
         dynamic message,
       ) async {
-        if (message is! _IsolateIteration<Process>) {
+        final _Context<Process, T>? context = this.context;
+        if (context == null || message is! _IsolateMessage) {
           return;
         }
 
-        await message.step.initialize(
-          message.process,
-        );
+        switch (message) {
+          case _IsolateMessageSuccess():
+            _completersById[message.id]?.complete();
+            context.isolatedResults.addAll(
+              message.result,
+            );
 
-        message.sendPort.send(
-          message.process,
-        );
+          case _IsolateMessageError():
+            if (context.error != null) {
+              return;
+            }
+
+            _closeCompleters();
+            context.catchError(
+              message.error,
+              message.stackTrace,
+            );
+            this.onError?.call(
+                  message.error,
+                  message.stackTrace,
+                  context.process,
+                  message.step,
+                  context.stopwatch.elapsed,
+                );
+        }
       },
     );
   }
 
-  /// Sends an initialization step to be executed in the isolate.
-  ///
-  /// [process] - the current state of the initialization process.
-  /// [step] - the initialization step to be executed.
-  /// Returns the updated process state after step execution.
-  Future<Process> send({
-    required Process process,
-    required DIStep<Process> step,
-  }) async {
-    final ReceivePort receivePort = ReceivePort();
-    this.sendPort.send(
-          _IsolateIteration<Process>(
-            sendPort: receivePort.sendPort,
-            process: process,
+  _Context<Process, T>? context;
+  final void Function(
+    Object error,
+    StackTrace stackTrace,
+    Process process,
+    DIStep step,
+    Duration duration,
+  )? onError;
+  final ReceivePort _receivePort = ReceivePort();
+  final Map<int, Completer<void>> _completersById = {};
+
+  void syncContext({
+    required _Context<Process, T> context,
+  }) =>
+      this.context = context;
+
+  Future<void> executeSteps() async {
+    final _Context<Process, T>? context = this.context;
+    if (context == null) {
+      return Future.value();
+    }
+
+    _completersById.clear();
+
+    final List<Future> isolates = List.generate(
+      context.isolatedSteps.length,
+      (
+        index,
+      ) {
+        final IsolatedInitializationStep<Process, T, dynamic, dynamic> step =
+            context.isolatedSteps[index];
+        _completersById[step.hashCode] = Completer<void>();
+        return Isolate.spawn<_IsolateRequest<Process, T, dynamic, dynamic>>(
+          _entry<Process, T>,
+          _IsolateRequest(
+            id: step.hashCode,
+            sendPort: _receivePort.sendPort,
+            process: context.process,
             step: step,
           ),
+          errorsAreFatal: step.errorsAreFatal,
+          debugName: step.debugName,
         );
+      },
+    );
 
-    return await receivePort.first;
+    await Future.wait(
+      [
+        Future.wait(isolates),
+        ..._completersById.values.map(
+          (
+            Completer<void> completer,
+          ) =>
+              completer.future,
+        ),
+      ],
+    );
   }
 
-  /// Closes the isolate and releases its resources.
-  void close() => this.isolate.kill(
-        priority: Isolate.immediate,
+  static void _entry<Process extends DIProcess<T>, T>(
+    _IsolateRequest<Process, T, dynamic, dynamic> request,
+  ) async {
+    try {
+      final dynamic isolatedResult = await request.step.run(
+        request.process,
       );
+      request.sendPort.send(
+        _IsolateMessageSuccess(
+          id: request.id,
+          result: {
+            request.step.isolatedKey: isolatedResult,
+          },
+        ),
+      );
+    } catch (error, stackTrace) {
+      request.sendPort.send(
+        _IsolateMessageError(
+          id: request.id,
+          error: error,
+          stackTrace: stackTrace,
+          step: request.step,
+        ),
+      );
+    }
+  }
+
+  void _closeCompleters() {
+    for (final Completer completer in _completersById.values) {
+      if (completer.isCompleted) {
+        continue;
+      }
+      completer.complete();
+    }
+  }
+
+  void close() {
+    context = null;
+    _receivePort.close();
+    _closeCompleters();
+    _completersById.clear();
+  }
 }

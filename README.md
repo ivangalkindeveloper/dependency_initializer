@@ -18,7 +18,7 @@ Identically as for a successful launch, a similar scenario works for a test appl
 # Usage
 1) Prepare list of initialize steps.
 ```dart
-  final List<InitializationStep<MyProcess>> coreStepList = [
+  final List<InitializationStep<MyProcess>> coresteps = [
     InitializationStep(
       title: "Config",
       initialize: (
@@ -27,7 +27,7 @@ Identically as for a successful launch, a similar scenario works for a test appl
           process.config = const MyConfig(),
     ),
   ];
-  final List<InitializationStep<MyProcess>> dataStepList = [
+  final List<InitializationStep<MyProcess>> datasteps = [
     InitializationStep(
       title: "HttpClient",
       initialize: (
@@ -76,7 +76,7 @@ Identically as for a successful launch, a similar scenario works for a test appl
       ),
     ),
   ];
-  final List<InitializationStep<MyProcess>> blocStepList = [
+  final List<InitializationStep<MyProcess>> blocsteps = [
     InitializationStep(
       title: "Bloc",
       initialize: (
@@ -93,10 +93,10 @@ Identically as for a successful launch, a similar scenario works for a test appl
 ```dart
   final DependencyInitializer initializer = DependencyInitializer<MyProcess, MyResult>(
     creteProcess: () => MyProcess(),
-    stepList: [
-      ...coreStepList,
-      ...dataStepList,
-      ...blocStepList,
+    steps: [
+      ...coresteps,
+      ...datasteps,
+      ...blocsteps,
     ],
     onSuccess: (
       DependencyInitializationResult<MyProcess, MyResult> initializationResult,
@@ -116,7 +116,7 @@ For example, if you want the Flutter application to show a native splash screen 
 ```dart
   final Initializer initializer = Initializer<MyProcess, MyResult>(
     creteProcess: () => MyProcess(),
-    stepList: stepList,
+    steps: steps,
     onSuccess: (
       DependencyInitializationResult<MyProcess, MyResult> initializationResult,
       Duration duration,
@@ -143,7 +143,7 @@ For example, you have a widget that displays its splash screen, and this widget 
 ```dart
   final Initializer initializer = Initializer<MyProcess, MyResult>(
     creteProcess: () => MyProcess(),
-    stepList: stepList,
+    steps: steps,
     onStart: (
       Completer<DependencyInitializationResult<MyProcess, MyResult>> completer,
     ) => runApp(
@@ -168,7 +168,7 @@ For example, you have a widget that displays its splash screen, and this widget 
 For example, in the runtime of a Flutter application, you need to reinitialize your new dependencies for the new environment and return the first widget of the Flutter application again.
 ```dart
   await initializationResult.reRun(
-    stepList: [
+    steps: [
       InitializationStep(
         title: "Config",
         initialize: (
@@ -176,7 +176,7 @@ For example, in the runtime of a Flutter application, you need to reinitialize y
         ) =>
             process.config = AnotherConfig(),
       ),
-      ...initializationResult.reinitializationStepList,
+      ...initializationResult.repeatSteps,
     ],
     onSuccess: (
       DependencyInitializationResult<MyProcess, MyResult> initializationResult,

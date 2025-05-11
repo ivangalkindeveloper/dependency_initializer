@@ -1,0 +1,4 @@
+enum DependencyInitializationStepType {
+  simple,
+  repeatable;
+}
