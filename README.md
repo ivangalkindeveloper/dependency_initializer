@@ -58,10 +58,10 @@ final class InitializationProcess extends DependencyInitializationProcess<Depend
 }
 ```
 ## Steps
-[DependencyInitializationStepType](https://github.com/ivangalkindeveloper/dependency_initializer/blob/master/lib/src/dependency_initialization_step_type.dart) - step execution type:
-simple - the step is executed once, this is useful for example for initializing Firebase, database and other integration packages.
-repeatable - the step is executed and remembered for further repeated execution when calling re-initialization using the runRepeat function.
-[InitializationStep](https://github.com/ivangalkindeveloper/dependency_initializer/blob/master/lib/src/dependency_initialization_step.dart) - async/async execution step in the current main isolate.
+[DependencyInitializationStepType](https://github.com/ivangalkindeveloper/dependency_initializer/blob/master/lib/src/dependency_initialization_step_type.dart) - step execution type:\
+simple - the step is executed once, this is useful for example for initializing Firebase, database and other integration packages.\
+repeatable - the step is executed and remembered for further repeated execution when calling re-initialization using the runRepeat function.\
+[InitializationStep](https://github.com/ivangalkindeveloper/dependency_initializer/blob/master/lib/src/dependency_initialization_step.dart) - async/async execution step in the current main isolate.\
 [IsolatedInitializationStep](https://github.com/ivangalkindeveloper/dependency_initializer/blob/master/lib/src/dependency_initialization_step.dart) - sync/async execution step in the new parallel isolate.
 Prepare list of initialize steps:
 ```dart
