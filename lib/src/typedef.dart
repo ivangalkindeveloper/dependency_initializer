@@ -16,7 +16,7 @@ typedef DIResult<Process extends DIProcess, T>
     = DependencyInitializationResult<Process, T>;
 
 /// Type DIResult - abbreviation for repeat function.
-typedef DIRepeatFunction<Process extends DependencyInitializationProcess, T>
+typedef DIRepeatCallback<Process extends DependencyInitializationProcess, T>
     = Future<void> Function({
   Process Function()? createProcess,
   List<DIStep>? steps,

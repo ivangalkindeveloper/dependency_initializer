@@ -1,5 +1,5 @@
-import 'dependency_initializer_test_data.dart';
-import 'dependency_initializer_test_domain.dart';
+import 'test_data.dart';
+import 'test_domain.dart';
 
 final class Dependency {
   const Dependency({

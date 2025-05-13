@@ -23,5 +23,5 @@ final class DependencyInitializationResult<Process extends DIProcess, T> {
   final List<DependencyInitializationStep> repeatSteps;
 
   /// Function to run the repeat process with the same or modified steps.
-  final DIRepeatFunction<Process, T> runRepeat;
+  final DIRepeatCallback<Process, T> runRepeat;
 }

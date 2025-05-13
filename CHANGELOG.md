@@ -1,5 +1,6 @@
 ## 3.0.0
 * Changing API;
+* New example;
 * Refactoring on parallel steps;
 * Update README.
 

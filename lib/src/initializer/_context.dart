@@ -60,14 +60,14 @@ final class _Context<Process extends DIProcess<T>, T> {
     Object error,
     StackTrace? stackTrace,
   ) {
-    stopwatch.stop();
-    completer.completeError(
-      error,
-      stackTrace,
-    );
+    this.stopwatch.stop();
+    this.completer.completeError(
+          error,
+          stackTrace,
+        );
     this.isolateController?.close();
-    error = error;
-    stackTrace = stackTrace;
+    this.error = error;
+    this.stackTrace = stackTrace;
   }
 
   /// Completes the initialization process successfully.
@@ -77,10 +77,10 @@ final class _Context<Process extends DIProcess<T>, T> {
   void finish(
     DIResult<Process, T> result,
   ) {
-    completer.complete(
-      result,
-    );
-    stopwatch.stop();
+    this.stopwatch.stop();
+    this.completer.complete(
+          result,
+        );
     this.isolateController?.close();
   }
 }

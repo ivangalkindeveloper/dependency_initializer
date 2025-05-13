@@ -1,7 +1,7 @@
 import 'package:dependency_initializer/dependency_initializer.dart';
 
-import 'dependency_initializer_test_data.dart';
-import 'dependency_initializer_test_dependency.dart';
+import 'test_data.dart';
+import 'test_dependency.dart';
 
 final class InitializationProcess
     extends DependencyInitializationProcess<Dependency> {

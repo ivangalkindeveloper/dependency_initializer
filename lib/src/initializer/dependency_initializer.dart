@@ -240,7 +240,7 @@ final class DependencyInitializer<Process extends DIProcess<T>, T> {
   }
 
   /// Creates a function for repeating the initialization process.
-  DIRepeatFunction<Process, T> _runRepeat({
+  DIRepeatCallback<Process, T> _runRepeat({
     required _Context<Process, T> context,
   }) =>
       ({
